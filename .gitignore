@@ -1,0 +1,7 @@
+.vs
+debug
+ui_*
+*.vcxproj*
+release
+.qmake.stash
+savePng
