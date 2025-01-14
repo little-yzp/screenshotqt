@@ -8,29 +8,23 @@
 #include <QFileDialog>
 #include <memory>
 #include <windows.h>
+#include <QKeySequence>
+#include <QDesktopWidget>
+#include <QTimer>
+#include "staticdata.h"
 #include "vld.h"
 #include "vld_def.h"
 
-WId GetForegroundWindowId()
-{
-    HWND hwnd = GetForegroundWindow();
-    return (WId)hwnd;
-}
-
-WId GetWholeScreenWindowId()
-{
-    HWND hwnd = GetDesktopWindow();
-    return (WId)hwnd;
-}
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))
+                                            ,m_picView(new PicView)
 {
     m_transparentMask = new TransparentMask;
     this->sysMenu->setIcon(QIcon(":/icon/icon/icon.svg"));
     InitMenu();
     InitToolBar();
     this->sysMenu->show();
-    connect(this, SIGNAL(Finished(QPixmap)), m_transparentMask, SLOT(ShowPic(QPixmap)));
+    connect(this, SIGNAL(Finished(QPixmap)), m_transparentMask, SLOT(ShowPic(QPixmap)),Qt::DirectConnection);
     //lambada表达式值传递和引用传递
     connect(this->m_transparentMask, &TransparentMask::FinishShot, this, [&](QRect rect) {
         m_toolBar->show(); 
@@ -39,29 +33,46 @@ SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
         });
     connect(this->m_transparentMask, &TransparentMask::ScreenShotStart, this, [&]() {m_toolBar->hide(); });
     connect(this, SIGNAL(SavePic(QString)), this->m_transparentMask,SLOT(SavePic(QString)));
+    connect(this, SIGNAL(ClipPic()),this->m_transparentMask, SLOT(ClipPic()));
+    connect(m_picView, &PicView::ExeStart, this, &SnipasteApp::ScreenShot);
+    //showFullScreen与showMaximized的区别
+    //m_picView->showFullScreen();
+    m_picView->ShowAllScreen();
+    m_picView->raise();
+
+    m_timer = new QTimer(this);
+    m_timer->setInterval(1000);
+    connect(m_timer, &QTimer::timeout, this, &SnipasteApp::timeoutHandler);
+
+    m_timer->start();
 }
 SnipasteApp::~SnipasteApp()
 {
-    if (m_menu)
+    if (m_menu!=nullptr)
     {
 		delete m_menu;
     }
-    if (sysMenu)
+    if (sysMenu!=nullptr)
     {
 		delete sysMenu;
     }
-    if (m_transparentMask)
+    if (m_transparentMask!=nullptr)
     {
 	   delete m_transparentMask;
     }
-    if (m_toolBar)
+    if (m_toolBar!=nullptr)
     {
         delete m_toolBar;
+    }
+    if (m_picView!=nullptr)
+    {
+        delete m_picView;
     }
 }
 void SnipasteApp::ScreenShot()
 {
-    QList<QScreen*>screens = qApp->screens();
+    QList<QScreen*>screens = QGuiApplication::screens();//qApp->screens();
+    QDesktopWidget* desktopWidget = qApp->desktop();
     if (!screens.empty())
     {
     }
@@ -72,7 +83,9 @@ void SnipasteApp::ScreenShot()
         QRect rect = screen->geometry();//geometry
         if (rect.contains(cursorPos))
         {
-            pix = screen->grabWindow(GetWholeScreenWindowId());
+            StaticData::Instance().s_rect = screen->geometry();
+            pix = screen->grabWindow(0);
+            break;
         }
 
     }
@@ -104,14 +117,26 @@ void SnipasteApp::funcHandler(QAction *action)
 	}
 	else if(action->text()=="完成")
 	{
-
+        emit ClipPic();
+        this->m_transparentMask->Hide();
 	}
     else
     {
         return;
-
     }
 	m_toolBar->hide();
+    //m_picView->ShowAllScreen();
+}
+void SnipasteApp::timeoutHandler()
+{
+    //qDebug() << "被提升";
+	m_picView->raise();
+    qDebug() << m_picView->isVisible();
+    if (!m_picView->isVisible())
+    {
+		qDebug() << "定时处理";
+		m_picView->ShowAllScreen();
+    }
 }
 void SnipasteApp::InitMenu()
 {

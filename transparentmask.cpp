@@ -1,6 +1,9 @@
 ﻿#include "transparentmask.h"
 #include <QDebug>
 #include <QPainter>
+#include <QClipboard>
+#include <QScreen>
+#include "staticdata.h"
 
 TransparentMask::TransparentMask(QWidget *parent)
 	: QWidget(parent)
@@ -20,6 +23,7 @@ TransparentMask::TransparentMask(QWidget *parent)
 TransparentMask::~TransparentMask()
 {
 	delete ui;
+	qDebug() << "遮罩析构";
 }
 
 void TransparentMask::setBgColor(const QColor& color)
@@ -62,7 +66,8 @@ void TransparentMask::mouseMoveEvent(QMouseEvent* event)
 void TransparentMask::ShowPic(QPixmap pix)
 {
 	this->m_pixmap = pix;
-	this->showMaximized();
+	this->ShowAllScreen();
+	//this->showFullScreen();
 }
 
 void TransparentMask::paintEvent(QPaintEvent* event)
@@ -154,7 +159,21 @@ QRect TransparentMask::handler(QPoint a, QPoint b)
 	return QRect(startX, startY, width, height);
 }
 
+void TransparentMask::ShowAllScreen()
+{
+	QRect rect = StaticData::Instance().s_rect;
+	this->setGeometry(rect);
+    this->showFullScreen();
+}
+
 void TransparentMask::SavePic(QString path)
 {
 	m_targetPixmap.save(path);
 }
+
+void TransparentMask::ClipPic()
+{
+	QClipboard* tmpClipboard = QApplication::clipboard();
+	tmpClipboard->setPixmap(m_targetPixmap);
+}
+

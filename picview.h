@@ -2,10 +2,8 @@
 #define PICVIEW_H
 
 #include <QWidget>
+#include <QShortcut>
 
-QT_BEGIN_NAMESPACE
-class QPixmap;
-QT_END_NAMESPACE
 namespace Ui {
 class PicView;
 }
@@ -17,12 +15,13 @@ class PicView : public QWidget
 public:
     explicit PicView(QWidget *parent = nullptr);
     ~PicView();
-    void paintEvent(QPaintEvent *paintEvent)override;
-    void ShowPic(QPixmap pix);
-
+    void ShowAllScreen();
+    void mouseMoveEvent(QMouseEvent* event);
 private:
     Ui::PicView *ui;
-    QPixmap m_pPix;
+    QShortcut *m_shortCut;
+signals:
+    void ExeStart();
 };
 
 #endif // PICVIEW_H

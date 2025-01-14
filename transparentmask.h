@@ -34,9 +34,11 @@ private:
 	QToolBar* m_toolBar;
 	void DrawTransparentRect(QPainter* painter);
 	QRect handler(QPoint a, QPoint b);
+	void ShowAllScreen();
 private slots:
 	void ShowPic(QPixmap pic);
 	void SavePic(QString path);
+	void ClipPic();
 signals:
 	void FinishShot(QRect rect);
 	void ScreenShotStart();
