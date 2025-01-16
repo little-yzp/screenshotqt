@@ -18,8 +18,10 @@
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))
                                             ,m_picView(new PicView)
+                                            ,m_transparentMask(new TransparentMask)
+                                            ,m_timer(new QTimer(this))
+                                            ,m_lastOpenDir("/")
 {
-    m_transparentMask = new TransparentMask;
     this->sysMenu->setIcon(QIcon(":/icon/icon/icon.svg"));
     InitMenu();
     InitToolBar();
@@ -40,7 +42,6 @@ SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
     m_picView->ShowAllScreen();
     m_picView->raise();
 
-    m_timer = new QTimer(this);
     m_timer->setInterval(1000);
     connect(m_timer, &QTimer::timeout, this, &SnipasteApp::timeoutHandler);
 
@@ -68,6 +69,10 @@ SnipasteApp::~SnipasteApp()
     {
         delete m_picView;
     }
+}
+void SnipasteApp::ScreenShotInterface()
+{
+    this->ScreenShot();
 }
 void SnipasteApp::ScreenShot()
 {
@@ -105,8 +110,13 @@ void SnipasteApp::funcHandler(QAction *action)
 	if (action->text() == "保存")
 	{
         //保存文件对话框响应速度太慢
-        QString FullPathName = QFileDialog::getSaveFileName(nullptr,"保存截图图片","",tr("*.png"));
+        QString FullPathName = QFileDialog::getSaveFileName(nullptr,"保存截图图片",m_lastOpenDir,tr("*.png"));
         qDebug() << "保存图片完整路径名称为:" << FullPathName;
+        if (FullPathName.isEmpty()) {
+            return;
+        }
+        //获取路径
+        m_lastOpenDir = FullPathName.left(FullPathName.lastIndexOf('/'));
         emit SavePic(FullPathName);
         this->m_transparentMask->Hide();
 	}
@@ -125,18 +135,12 @@ void SnipasteApp::funcHandler(QAction *action)
         return;
     }
 	m_toolBar->hide();
-    //m_picView->ShowAllScreen();
 }
 void SnipasteApp::timeoutHandler()
 {
-    //qDebug() << "被提升";
-	m_picView->raise();
-    qDebug() << m_picView->isVisible();
-    if (!m_picView->isVisible())
-    {
-		qDebug() << "定时处理";
-		m_picView->ShowAllScreen();
-    }
+    //bug激活窗口存在问题
+    //m_picView->activateWindow();
+    //m_picView->setFocus();
 }
 void SnipasteApp::InitMenu()
 {

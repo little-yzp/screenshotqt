@@ -15,6 +15,7 @@ class SnipasteApp : public QObject
 public:
     explicit SnipasteApp(QObject *parent = nullptr);
     ~SnipasteApp();
+    void ScreenShotInterface();
 
 signals:
     void Finished(QPixmap pix);
@@ -34,6 +35,7 @@ private:
     QPixmap m_targetPixmap;
     QPointer<PicView> m_picView;
     QPointer<QTimer> m_timer;
+    QString m_lastOpenDir;
 };
 //问题:QPointer与QScopedPointer的区别?
 //体会:QPointer只能保证使用空指针时不会崩溃

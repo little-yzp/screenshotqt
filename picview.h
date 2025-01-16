@@ -17,6 +17,8 @@ public:
     ~PicView();
     void ShowAllScreen();
     void mouseMoveEvent(QMouseEvent* event);
+protected:
+    bool eventFilter(QObject* obj, QEvent* event);
 private:
     Ui::PicView *ui;
     QShortcut *m_shortCut;
