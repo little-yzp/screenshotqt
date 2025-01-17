@@ -16,6 +16,7 @@ public:
 		return data;
 	}
 	QRect s_rect;
+	QScreen* s_curScreenPtr;
 };
 #endif
 

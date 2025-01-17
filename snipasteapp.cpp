@@ -1,5 +1,4 @@
 ﻿#include "snipasteapp.h"
-#include "picview.h"
 #include <QMenu>
 #include <QApplication>
 #include <QScreen>
@@ -17,7 +16,6 @@
 
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))
-                                            ,m_picView(new PicView)
                                             ,m_transparentMask(new TransparentMask)
                                             ,m_timer(new QTimer(this))
                                             ,m_lastOpenDir("/")
@@ -29,18 +27,24 @@ SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
     connect(this, SIGNAL(Finished(QPixmap)), m_transparentMask, SLOT(ShowPic(QPixmap)),Qt::DirectConnection);
     //lambada表达式值传递和引用传递
     connect(this->m_transparentMask, &TransparentMask::FinishShot, this, [&](QRect rect) {
+
         m_toolBar->show(); 
         m_toolBar->raise();
-        m_toolBar->move(rect.x()+rect.width()-m_toolBar->width(), rect.y()+rect.height());
+        int startX = 0, startY = 0;
+        if (StaticData::Instance().s_curScreenPtr != nullptr)
+        {
+            startX = StaticData::Instance().s_curScreenPtr->geometry().x();
+            startY = StaticData::Instance().s_curScreenPtr->geometry().y();
+        }
+        startX += rect.x() + rect.width() - m_toolBar->width();
+        startY+=rect.y()+rect.height();
+        m_toolBar->move(startX,startY);
         });
     connect(this->m_transparentMask, &TransparentMask::ScreenShotStart, this, [&]() {m_toolBar->hide(); });
     connect(this, SIGNAL(SavePic(QString)), this->m_transparentMask,SLOT(SavePic(QString)));
     connect(this, SIGNAL(ClipPic()),this->m_transparentMask, SLOT(ClipPic()));
-    connect(m_picView, &PicView::ExeStart, this, &SnipasteApp::ScreenShot);
     //showFullScreen与showMaximized的区别
     //m_picView->showFullScreen();
-    m_picView->ShowAllScreen();
-    m_picView->raise();
 
     m_timer->setInterval(1000);
     connect(m_timer, &QTimer::timeout, this, &SnipasteApp::timeoutHandler);
@@ -65,10 +69,6 @@ SnipasteApp::~SnipasteApp()
     {
         delete m_toolBar;
     }
-    if (m_picView!=nullptr)
-    {
-        delete m_picView;
-    }
 }
 void SnipasteApp::ScreenShotInterface()
 {
@@ -89,6 +89,7 @@ void SnipasteApp::ScreenShot()
         if (rect.contains(cursorPos))
         {
             StaticData::Instance().s_rect = screen->geometry();
+            StaticData::Instance().s_curScreenPtr = screen;
             pix = screen->grabWindow(0);
             break;
         }

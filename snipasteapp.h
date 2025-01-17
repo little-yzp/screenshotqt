@@ -33,9 +33,9 @@ private:
     void InitToolBar();
     QPointer<TransparentMask>m_transparentMask;
     QPixmap m_targetPixmap;
-    QPointer<PicView> m_picView;
     QPointer<QTimer> m_timer;
     QString m_lastOpenDir;
+    QList<PicView>m_picViewList;
 };
 //问题:QPointer与QScopedPointer的区别?
 //体会:QPointer只能保证使用空指针时不会崩溃

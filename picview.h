@@ -15,15 +15,8 @@ class PicView : public QWidget
 public:
     explicit PicView(QWidget *parent = nullptr);
     ~PicView();
-    void ShowAllScreen();
-    void mouseMoveEvent(QMouseEvent* event);
-protected:
-    bool eventFilter(QObject* obj, QEvent* event);
 private:
     Ui::PicView *ui;
-    QShortcut *m_shortCut;
-signals:
-    void ExeStart();
 };
 
 #endif // PICVIEW_H

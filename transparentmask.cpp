@@ -126,6 +126,8 @@ void TransparentMask::DrawTransparentRect(QPainter* painter)
 QRect TransparentMask::handler(QPoint a, QPoint b)
 {
 
+	qDebug() << "起点:" << a;
+	qDebug() << "终点:" << b;
 	int startX = 0, startY = 0;
 	int width = 0, height = 0;
 	if (a.x() == b.x() && a.y() == b.y())
@@ -156,6 +158,7 @@ QRect TransparentMask::handler(QPoint a, QPoint b)
 		startY = a.y();
 		height = b.y() - a.y();
 	}
+	qDebug() << "开始起点X坐标:" << startX << "开始起点Y坐标:" << startY;
 	return QRect(startX, startY, width, height);
 }
 
