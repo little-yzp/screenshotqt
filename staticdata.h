@@ -1,7 +1,9 @@
 #pragma once
 #ifndef __STATICDATA_H__
 #define __STATICDATA_H__
-#include<QRect>
+#include <QRect>
+#include"picview.h"
+
 class StaticData 
 {
 private:
@@ -17,6 +19,7 @@ public:
 	}
 	QRect s_rect;
 	QScreen* s_curScreenPtr;
+	QList<PicView>s_picViewList;
 };
 #endif
 

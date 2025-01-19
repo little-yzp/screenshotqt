@@ -6,5 +6,6 @@
         <file>icon/pin.svg</file>
         <file>icon/trick.svg</file>
         <file>icon/pic.svg</file>
+        <file>icon/testpixmap.jpg</file>
     </qresource>
 </RCC>

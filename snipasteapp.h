@@ -21,10 +21,10 @@ signals:
     void Finished(QPixmap pix);
     void SavePic(QString path);
     void ClipPic();
+    void PinPic();
 private slots:
     void ScreenShot();
     void funcHandler(QAction *action);
-    void timeoutHandler();
 private:
     QPointer<QSystemTrayIcon>sysMenu;
     QPointer<QMenu>m_menu;
@@ -32,10 +32,7 @@ private:
     void InitMenu();
     void InitToolBar();
     QPointer<TransparentMask>m_transparentMask;
-    QPixmap m_targetPixmap;
-    QPointer<QTimer> m_timer;
     QString m_lastOpenDir;
-    QList<PicView>m_picViewList;
 };
 //问题:QPointer与QScopedPointer的区别?
 //体会:QPointer只能保证使用空指针时不会崩溃

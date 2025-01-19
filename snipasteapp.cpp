@@ -17,7 +17,6 @@
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))
                                             ,m_transparentMask(new TransparentMask)
-                                            ,m_timer(new QTimer(this))
                                             ,m_lastOpenDir("/")
 {
     this->sysMenu->setIcon(QIcon(":/icon/icon/icon.svg"));
@@ -45,11 +44,7 @@ SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
     connect(this, SIGNAL(ClipPic()),this->m_transparentMask, SLOT(ClipPic()));
     //showFullScreen与showMaximized的区别
     //m_picView->showFullScreen();
-
-    m_timer->setInterval(1000);
-    connect(m_timer, &QTimer::timeout, this, &SnipasteApp::timeoutHandler);
-
-    m_timer->start();
+    connect(this, SIGNAL(PinPic()), this->m_transparentMask, SLOT(PinPic()));
 }
 SnipasteApp::~SnipasteApp()
 {
@@ -119,29 +114,24 @@ void SnipasteApp::funcHandler(QAction *action)
         //获取路径
         m_lastOpenDir = FullPathName.left(FullPathName.lastIndexOf('/'));
         emit SavePic(FullPathName);
-        this->m_transparentMask->Hide();
 	}
 	else if (action->text() == "退出")
 	{
-        this->m_transparentMask->Hide();
         //此退出并非退出截图程序，只退出当前截图
 	}
 	else if(action->text()=="完成")
 	{
         emit ClipPic();
-        this->m_transparentMask->Hide();
 	}
-    else
+    else if(action->text()=="固定")
     {
-        return;
+        emit PinPic();
     }
+    else 
+    {
+    }
+	this->m_transparentMask->Hide();
 	m_toolBar->hide();
-}
-void SnipasteApp::timeoutHandler()
-{
-    //bug激活窗口存在问题
-    //m_picView->activateWindow();
-    //m_picView->setFocus();
 }
 void SnipasteApp::InitMenu()
 {

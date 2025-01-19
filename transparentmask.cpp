@@ -4,6 +4,7 @@
 #include <QClipboard>
 #include <QScreen>
 #include "staticdata.h"
+#include "picview.h"
 
 TransparentMask::TransparentMask(QWidget *parent)
 	: QWidget(parent)
@@ -14,7 +15,7 @@ TransparentMask::TransparentMask(QWidget *parent)
 	,m_endPoint(0,0)
 {
 	ui->setupUi(this);
-	this->setAttribute(Qt::WA_DeleteOnClose);
+	//this->setAttribute(Qt::WA_DeleteOnClose);
 	//mask不设置FramelessWindowHint,ToolBar与截图区域存在间隙
 	this->setWindowFlags(Qt::FramelessWindowHint);
 	this->setWindowIcon(QIcon(":/icon/icon/pic.svg"));
@@ -178,5 +179,11 @@ void TransparentMask::ClipPic()
 {
 	QClipboard* tmpClipboard = QApplication::clipboard();
 	tmpClipboard->setPixmap(m_targetPixmap);
+}
+
+void TransparentMask::PinPic()
+{
+	PicView* picview = new PicView;
+	picview->ShowPic(m_targetPixmap);
 }
 
