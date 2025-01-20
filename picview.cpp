@@ -15,15 +15,17 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_pixmap(pixmap),
     m_dragging(false),
     m_offset(),
-    m_menu(new QMenu(this)),
     m_toolbar(new QToolBar(this)),
     QWidget(parent),
-    ui(new Ui::PicView)
+    ui(new Ui::PicView())
 {
     ui->setupUi(this);
     this->setAttribute(Qt::WA_DeleteOnClose);
     this->setWindowFlags(Qt::FramelessWindowHint);
-    m_menu->addAction("删除",this, SLOT(close()));
+    this->setContextMenuPolicy(Qt::ActionsContextMenu);
+    QAction* action1 = new QAction("关闭", this);
+    connect(action1, &QAction::triggered, this, &QWidget::close);
+    this->addAction(action1);
 }
 
 PicView::~PicView()
@@ -70,12 +72,13 @@ void PicView::mouseMoveEvent(QMouseEvent* event)
 {
     if (m_dragging)
     {
+        qDebug() << event->button();
         move(event->globalPos() - m_offset);
         event->accept();
     }
 }
 
-void PicView::mouseRelaseEvent(QMouseEvent* event)
+void PicView::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)
     {
@@ -83,10 +86,4 @@ void PicView::mouseRelaseEvent(QMouseEvent* event)
         //当前事件已经被处理，不喜欢该事件在传播给其他事件处理器
         event->accept();
     }
-}
-
-void PicView::contextMenuEvent(QContextMenuEvent* event)
-{
-    m_menu->show();
-    m_menu->move(event->globalPos());
 }

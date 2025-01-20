@@ -64,6 +64,7 @@ SnipasteApp::~SnipasteApp()
     {
         delete m_toolBar;
     }
+    qDebug() << "snipasteapp被析构";
 }
 void SnipasteApp::ScreenShotInterface()
 {
@@ -71,6 +72,11 @@ void SnipasteApp::ScreenShotInterface()
 }
 void SnipasteApp::ScreenShot()
 {
+    //解决多次按截图键,多次阴影问题
+    if (m_transparentMask->isVisible())
+    {
+        return;
+    }
     QList<QScreen*>screens = QGuiApplication::screens();//qApp->screens();
     QDesktopWidget* desktopWidget = qApp->desktop();
     if (!screens.empty())
