@@ -27,14 +27,23 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
     snipasteapp.cpp \
-    picview.cpp
+    picview.cpp \
+    transparentmask.cpp
 
 HEADERS += \
     snipasteapp.h \
-    picview.h
+    picview.h \
+    transparentmask.h\
+    shortcutfilter.h \
+    vld.h \
+    vld_def.h
+
 
 FORMS += \
-    picview.ui
+    picview.ui \
+    transparentmask.ui
+
+LIBS += $$PWD/lib/vld.lib
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
