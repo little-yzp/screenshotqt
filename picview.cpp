@@ -43,6 +43,11 @@ void PicView::paintEvent(QPaintEvent* event)
     qDebug() << "固定显示绘图";
     QPainter painter(this);
     painter.drawPixmap(0, 0, m_pixmap);
+    QPen pen;
+    pen.setColor(Qt::red);
+    painter.setPen(pen);
+    //绘制截图边框
+    painter.drawRect(0, 0, m_pixmap.width()-1,m_pixmap.height()-1);
 }
 
 

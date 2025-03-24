@@ -31,7 +31,6 @@ private:
 	bool m_bIsMovingFlag;
 	QPixmap m_pixmap;//整个屏幕
 	QPixmap m_targetPixmap;//最终的截图区域
-	QToolBar* m_toolBar;
 
 	void DrawTransparentRect(QPainter* painter);
 	QRect handler(QPoint a, QPoint b);

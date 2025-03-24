@@ -11,11 +11,13 @@
 #include <QDesktopWidget>
 #include <QTimer>
 #include "staticdata.h"
+#include "tipwh.h"
 
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))
                                             ,m_transparentMask(new TransparentMask)
                                             ,m_lastOpenDir("/")
+                                            ,m_tipwh(new Tipwh)
 {
     this->sysMenu->setIcon(QIcon(":/icon/icon/icon.svg"));
     InitMenu();
