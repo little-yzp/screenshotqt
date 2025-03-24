@@ -11,8 +11,6 @@
 #include <QDesktopWidget>
 #include <QTimer>
 #include "staticdata.h"
-#include "vld.h"
-#include "vld_def.h"
 
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))

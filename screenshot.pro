@@ -35,15 +35,15 @@ HEADERS += \
     picview.h \
     transparentmask.h\
     shortcutfilter.h \
-    vld.h \
-    vld_def.h
+# vld.h \
+# vld_def.h
 
 
 FORMS += \
     picview.ui \
     transparentmask.ui
 
-LIBS += $$PWD/lib/vld.lib
+# LIBS += $$PWD/lib/vld.lib
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
