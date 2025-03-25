@@ -23,7 +23,7 @@ TransparentMask::TransparentMask(QWidget *parent)
 TransparentMask::~TransparentMask()
 {
 	delete ui;
-	qDebug() << "遮罩析构";
+	qDebug() << "transparentMask were deleted";
 }
 
 void TransparentMask::setBgColor(const QColor& color)
@@ -126,8 +126,8 @@ void TransparentMask::DrawTransparentRect(QPainter* painter)
 QRect TransparentMask::handler(QPoint a, QPoint b)
 {
 
-	qDebug() << "起点:" << a;
-	qDebug() << "终点:" << b;
+	qDebug() << "spos:" << a;
+	qDebug() << "epos:" << b;
 	int startX = 0, startY = 0;
 	int width = 0, height = 0;
 	if (a.x() == b.x() && a.y() == b.y())
@@ -158,7 +158,7 @@ QRect TransparentMask::handler(QPoint a, QPoint b)
 		startY = a.y();
 		height = b.y() - a.y();
 	}
-	qDebug() << "开始起点X坐标:" << startX << "开始起点Y坐标:" << startY;
+	qDebug() << "sposX:" << startX << "sposY:" << startY;
 	return QRect(startX, startY, width, height);
 }
 

@@ -23,14 +23,14 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     this->setAttribute(Qt::WA_DeleteOnClose);
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setContextMenuPolicy(Qt::ActionsContextMenu);
-    QAction* action1 = new QAction("关闭", this);
+    QAction* action1 = new QAction("close", this);
     connect(action1, &QAction::triggered, this, &QWidget::close);
     this->addAction(action1);
 }
 
 PicView::~PicView()
 {
-    qDebug() << "显示被析构";
+    qDebug() << "picview obj were deleted"<<this->winId();
     delete ui;
 }
 
@@ -40,7 +40,7 @@ void PicView::InitToolBar()
 
 void PicView::paintEvent(QPaintEvent* event)
 {
-    qDebug() << "固定显示绘图";
+    qDebug() << "fixed display drawing";
     QPainter painter(this);
     painter.drawPixmap(0, 0, m_pixmap);
     QPen pen;
@@ -60,7 +60,7 @@ void PicView::ShowPic(QPixmap pixmap)
 		this->show();
 		return;
     }
-    qDebug() << "截取像素为空";
+    qDebug() << "pixels were null";
 }
 
 void PicView::mousePressEvent(QMouseEvent* event)

@@ -64,7 +64,7 @@ SnipasteApp::~SnipasteApp()
     {
         delete m_toolBar;
     }
-    qDebug() << "snipasteapp被析构";
+    qDebug() << "snipasteapp deleted";
 }
 void SnipasteApp::ScreenShotInterface()
 {
@@ -98,7 +98,7 @@ void SnipasteApp::ScreenShot()
     }
     if (pix.isNull())
     {
-        qDebug() << "没有截取到像素";
+        qDebug() << "pixels were not obtained here";
     }
     emit Finished(pix);
 }
@@ -109,11 +109,11 @@ void SnipasteApp::funcHandler(QAction *action)
 	{
 		return;
 	}
-	if (action->text() == "保存")
+	if (action->text() == "save")
 	{
         //保存文件对话框响应速度太慢
-        QString FullPathName = QFileDialog::getSaveFileName(nullptr,"保存截图图片",m_lastOpenDir,tr("*.png"));
-        qDebug() << "保存图片完整路径名称为:" << FullPathName;
+        QString FullPathName = QFileDialog::getSaveFileName(nullptr,"picture saving",m_lastOpenDir,tr("*.png"));
+        qDebug() << "pic absoluate path is:" << FullPathName;
         if (FullPathName.isEmpty()) {
             return;
         }
@@ -121,15 +121,15 @@ void SnipasteApp::funcHandler(QAction *action)
         m_lastOpenDir = FullPathName.left(FullPathName.lastIndexOf('/'));
         emit SavePic(FullPathName);
 	}
-	else if (action->text() == "退出")
+	else if (action->text() == "quit")
 	{
         //此退出并非退出截图程序，只退出当前截图
 	}
-	else if(action->text()=="完成")
+	else if(action->text()=="finish")
 	{
         emit ClipPic();
 	}
-    else if(action->text()=="固定")
+    else if(action->text()=="pin")
     {
         emit PinPic();
     }
@@ -142,18 +142,18 @@ void SnipasteApp::funcHandler(QAction *action)
 void SnipasteApp::InitMenu()
 {
     m_menu=new QMenu();
-    m_menu->addAction("截图",this,SLOT(ScreenShot()));
-    m_menu->addAction("退出",qApp,SLOT(quit()));
+    m_menu->addAction("screenshot",this,SLOT(ScreenShot()));
+    m_menu->addAction("quit",qApp,SLOT(quit()));
     this->sysMenu->setContextMenu(m_menu);
 }
 void SnipasteApp::InitToolBar()
 {
 	m_toolBar = new QToolBar;
-	m_toolBar->addAction(QIcon(":/icon/icon/save.svg"), "保存");
-    m_toolBar->addAction(QIcon(":/icon/icon/pin.svg"), "固定");
+	m_toolBar->addAction(QIcon(":/icon/icon/save.svg"), "save");
+    m_toolBar->addAction(QIcon(":/icon/icon/pin.svg"), "pin");
     m_toolBar->addSeparator();
-	m_toolBar->addAction(QIcon(":/icon/icon/delete.svg"), "退出");
-    m_toolBar->addAction(QIcon(":/icon/icon/trick.svg"),"完成");
+	m_toolBar->addAction(QIcon(":/icon/icon/delete.svg"), "quit");
+    m_toolBar->addAction(QIcon(":/icon/icon/trick.svg"),"finish");
 	connect(m_toolBar, &QToolBar::actionTriggered, this, &SnipasteApp::funcHandler);
     m_toolBar->setWindowFlags(Qt::FramelessWindowHint);
 }

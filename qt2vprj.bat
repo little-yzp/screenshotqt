@@ -1,0 +1,1 @@
+C:\Qt\Qt5.12.2\5.12.2\msvc2017_64\bin\qmake.exe -tp vc screenshot.pro
