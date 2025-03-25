@@ -13,10 +13,10 @@
 #include "staticdata.h"
 #include "tipwh.h"
 
+QString SnipasteApp::m_lastOpenDir{ "." };
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))
                                             ,m_transparentMask(new TransparentMask)
-                                            ,m_lastOpenDir("/")
                                             ,m_tipwh(new Tipwh)
 {
     this->sysMenu->setIcon(QIcon(":/icon/icon/icon.svg"));
@@ -69,6 +69,15 @@ SnipasteApp::~SnipasteApp()
 void SnipasteApp::ScreenShotInterface()
 {
     this->ScreenShot();
+}
+QString SnipasteApp::getLastOpenDir()
+{
+    return m_lastOpenDir;
+}
+void SnipasteApp::setLastOpenDir(QString path)
+{
+    m_lastOpenDir = path;
+    
 }
 void SnipasteApp::ScreenShot()
 {

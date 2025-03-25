@@ -17,7 +17,8 @@ public:
     explicit SnipasteApp(QObject *parent = nullptr);
     ~SnipasteApp();
     void ScreenShotInterface();
-
+    static QString getLastOpenDir();
+    static void setLastOpenDir(QString path);
 signals:
     void Finished(QPixmap pix);
     void SavePic(QString path);
@@ -34,7 +35,7 @@ private:
     void InitMenu();
     void InitToolBar();
     QPointer<TransparentMask>m_transparentMask;
-    QString m_lastOpenDir;
+    static QString m_lastOpenDir;
 };
 //问题:QPointer与QScopedPointer的区别?
 //体会:QPointer只能保证使用空指针时不会崩溃

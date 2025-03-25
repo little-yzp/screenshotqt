@@ -1,10 +1,13 @@
 ﻿#include "picview.h"
+#include "snipasteapp.h"
 #include "ui_picview.h"
 
 #include <QPixmap>
 #include <QPainter>
 #include <QScreen>
 #include <QDebug>
+#include <QClipboard>
+#include <QFileDialog>
 #include <QMouseEvent>
 
 PicView::PicView(QWidget *parent) :PicView(QPixmap(), nullptr)
@@ -21,11 +24,31 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
 {
     ui->setupUi(this);
     this->setAttribute(Qt::WA_DeleteOnClose);
-    this->setWindowFlags(Qt::FramelessWindowHint);
+    //设置无边框,保持顶部窗口状态
+    this->setWindowFlags(Qt::FramelessWindowHint);//|Qt::WindowStaysOnTopHint);
     this->setContextMenuPolicy(Qt::ActionsContextMenu);
     QAction* action1 = new QAction("close", this);
+    QAction* action2 = new QAction("save", this);
+    QAction* action3 = new QAction("copy to clipboard", this);
     connect(action1, &QAction::triggered, this, &QWidget::close);
+    connect(action2, &QAction::triggered, this, [&]() {
+        QString FullPathName=QFileDialog::getSaveFileName(nullptr,"picture saving",SnipasteApp::getLastOpenDir(),tr("*.png"));
+        if (FullPathName.isEmpty())
+        {
+            return;
+        }
+        m_pixmap.save(FullPathName);
+        SnipasteApp::setLastOpenDir(FullPathName.left(FullPathName.lastIndexOf('/')));
+        this->close();
+        });
+    connect(action3, &QAction::triggered, this, [&]() {
+        QApplication::clipboard()->setPixmap(m_pixmap);
+        this->close();
+        });
     this->addAction(action1);
+    this->addAction(action2);
+    this->addAction(action3);
+
 }
 
 PicView::~PicView()
@@ -91,4 +114,9 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
         //当前事件已经被处理，不喜欢该事件在传播给其他事件处理器
         event->accept();
     }
+}
+
+void PicView::focusOutEvent(QFocusEvent* event)
+{
+    event->ignore();
 }

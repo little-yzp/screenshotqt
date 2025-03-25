@@ -18,6 +18,7 @@ TransparentMask::TransparentMask(QWidget *parent)
 	//mask不设置FramelessWindowHint,ToolBar与截图区域存在间隙
 	this->setWindowFlags(Qt::FramelessWindowHint);
 	this->setWindowIcon(QIcon(":/icon/icon/pic.svg"));
+	this->installEventFilter(this);
 }
 
 TransparentMask::~TransparentMask()
@@ -88,6 +89,23 @@ void TransparentMask::Hide()
 {
 	m_prePoint = m_endPoint = QPoint(0, 0);
 	this->hide();
+}
+
+bool TransparentMask::eventFilter(QObject* obj, QEvent* event)
+{
+	if (event->type() == QEvent::KeyPress)
+	{
+		QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+		switch (keyEvent->type())
+		{
+			case Qt::Key_Escape:
+				this->Hide();
+				break;
+			default:
+				break;
+		}
+	}
+	return false;
 }
 
 void TransparentMask::DrawTransparentRect(QPainter* painter)

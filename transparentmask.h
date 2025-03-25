@@ -23,6 +23,7 @@ public:
 	void mouseMoveEvent(QMouseEvent* event)override;
 	void paintEvent(QPaintEvent* event)override;
 	void Hide();
+	bool eventFilter(QObject* obj, QEvent* event)override;
 private:
 	Ui::TransparentMaskClass *ui;
 	QPoint m_prePoint;
