@@ -23,9 +23,9 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
-    this->setAttribute(Qt::WA_DeleteOnClose);
+    //this->setAttribute(Qt::WA_DeleteOnClose);
     //设置无边框,保持顶部窗口状态
-    this->setWindowFlags(Qt::FramelessWindowHint);//|Qt::WindowStaysOnTopHint);
+    this->setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
     this->setContextMenuPolicy(Qt::ActionsContextMenu);
     QAction* action1 = new QAction("close", this);
     QAction* action2 = new QAction("save", this);
@@ -119,4 +119,21 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
 void PicView::focusOutEvent(QFocusEvent* event)
 {
     event->ignore();
+}
+
+void PicView::closeEvent(QCloseEvent* event)
+{
+    //在静态数组中找到这个然后删除
+    for (PicView* item:TransparentMask::s_picList)
+    {
+        if (item == this)
+        {
+            TransparentMask::s_picList.removeAll(this);
+        }
+    }
+    if (this != nullptr)
+    {
+        this->deleteLater();
+    }
+    QWidget::closeEvent(event);
 }

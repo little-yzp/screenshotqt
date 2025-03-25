@@ -81,6 +81,8 @@ void SnipasteApp::setLastOpenDir(QString path)
 }
 void SnipasteApp::ScreenShot()
 {
+    //截图开始前先将已有的截图界面动态切换到非始终置顶显示
+
     //解决多次按截图键,多次阴影问题
     if (m_transparentMask->isVisible())
     {
@@ -110,6 +112,7 @@ void SnipasteApp::ScreenShot()
         qDebug() << "pixels were not obtained here";
     }
     emit Finished(pix);
+
 }
 void SnipasteApp::funcHandler(QAction *action)
 {

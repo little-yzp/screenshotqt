@@ -6,6 +6,8 @@
 #include "staticdata.h"
 #include "picview.h"
 
+QList<PicView*> TransparentMask::s_picList = QList<PicView*>();
+
 TransparentMask::TransparentMask(QWidget *parent)
 	: QWidget(parent)
 	, ui(new Ui::TransparentMaskClass())
@@ -68,7 +70,12 @@ void TransparentMask::ShowPic(QPixmap pix)
 {
 	this->m_pixmap = pix;
 	this->ShowAllScreen();
-	//this->showFullScreen();
+	for (PicView* item : TransparentMask::s_picList)
+	{
+		item->setWindowFlags(item->windowFlags() & ~Qt::WindowStaysOnTopHint);
+		item->show();
+	}
+	this->raise();
 }
 
 void TransparentMask::paintEvent(QPaintEvent* event)
@@ -96,7 +103,7 @@ bool TransparentMask::eventFilter(QObject* obj, QEvent* event)
 	if (event->type() == QEvent::KeyPress)
 	{
 		QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-		switch (keyEvent->type())
+		switch (keyEvent->key())
 		{
 			case Qt::Key_Escape:
 				this->Hide();
@@ -105,7 +112,7 @@ bool TransparentMask::eventFilter(QObject* obj, QEvent* event)
 				break;
 		}
 	}
-	return false;
+	return QObject::eventFilter(obj,event);
 }
 
 void TransparentMask::DrawTransparentRect(QPainter* painter)
@@ -201,6 +208,13 @@ void TransparentMask::ClipPic()
 void TransparentMask::PinPic()
 {
 	PicView *picview=new PicView;
+	s_picList << picview;
+
+	for (PicView* item : TransparentMask::s_picList)
+	{
+		item->setWindowFlags(item->windowFlags() | Qt::WindowStaysOnTopHint);
+		item->show();
+	}
 	picview->ShowPic(m_targetPixmap);
 }
 

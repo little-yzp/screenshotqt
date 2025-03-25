@@ -4,17 +4,22 @@
 #include <QMouseEvent>
 #include <QPixmap>
 #include <QToolBar>
+#include "picview.h"
 #include "ui_transparentmask.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TransparentMaskClass; };
 QT_END_NAMESPACE
 
+
+
 class TransparentMask : public QWidget
 {
 	Q_OBJECT
 
 public:
+	
+	static QList<PicView*>s_picList;
 	TransparentMask(QWidget *parent = nullptr);
 	~TransparentMask();
 	void setBgColor(const QColor& color);
