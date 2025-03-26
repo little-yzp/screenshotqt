@@ -20,6 +20,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_offset(),
     m_toolbar(new QToolBar(this)),
     QWidget(parent),
+    m_zoomFactor(1.0),
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
@@ -70,7 +71,7 @@ void PicView::paintEvent(QPaintEvent* event)
     pen.setColor(Qt::red);
     painter.setPen(pen);
     //绘制截图边框
-    painter.drawRect(0, 0, m_pixmap.width()-1,m_pixmap.height()-1);
+    painter.drawRect(0, 0, this->width()-1,this->height()-1);
 }
 
 
@@ -102,8 +103,22 @@ void PicView::mouseMoveEvent(QMouseEvent* event)
     {
         qDebug() << event->button();
         move(event->globalPos() - m_offset);
-        event->accept();
+        /*event->accept();*/
     }
+    //边界检测
+    const int borderWidth = 5;
+    QRect innerRect = rect().adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth);
+
+    if (!innerRect.contains(event->pos()))
+    {
+        qDebug() << "Mouse is on the border";
+    }
+    else
+    {
+        qDebug() << "Mouse is inside";
+    }
+    event->accept();
+    
 }
 
 void PicView::mouseReleaseEvent(QMouseEvent* event)
@@ -121,6 +136,11 @@ void PicView::focusOutEvent(QFocusEvent* event)
     event->ignore();
 }
 
+void PicView::focusInEvent(QFocusEvent* event)
+{
+    qDebug() << "获取焦点";
+}
+
 void PicView::closeEvent(QCloseEvent* event)
 {
     //在静态数组中找到这个然后删除
@@ -136,4 +156,16 @@ void PicView::closeEvent(QCloseEvent* event)
         this->deleteLater();
     }
     QWidget::closeEvent(event);
+}
+
+void PicView::wheelEvent(QWheelEvent* event)
+{
+    double delta = event->angleDelta().y() > 0 ? 0.1 : -0.1;
+    SetZoomFactor(m_zoomFactor + delta);
+}
+
+void PicView::SetZoomFactor(double factor)
+{
+    m_zoomFactor = qBound(0.1, factor, 10.0);
+    update();
 }
