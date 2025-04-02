@@ -92,7 +92,6 @@ void PicView::mousePressEvent(QMouseEvent* event)
     {
         m_dragging = true;
         m_offset = event->globalPos()-pos();
-        event->accept();
     }
 }
 
@@ -102,7 +101,6 @@ void PicView::mouseMoveEvent(QMouseEvent* event)
     {
         qDebug() << event->button();
         move(event->globalPos() - m_offset);
-        event->accept();
     }
 }
 
@@ -111,8 +109,6 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton)
     {
         m_dragging = false;
-        //当前事件已经被处理，不喜欢该事件在传播给其他事件处理器
-        event->accept();
     }
 }
 
