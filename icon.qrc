@@ -7,4 +7,7 @@
         <file>icon/trick.svg</file>
         <file>icon/pic.svg</file>
     </qresource>
+    <qresource prefix="/styles">
+        <file>styles/styles.qss</file>
+    </qresource>
 </RCC>

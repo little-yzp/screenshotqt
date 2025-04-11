@@ -9,6 +9,8 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include <QMouseEvent>
+#include <QGraphicsDropShadowEffect>
+#include <qpropertyanimation.h>
 
 PicView::PicView(QWidget *parent) :PicView(QPixmap(), nullptr)
 {
@@ -18,6 +20,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_pixmap(pixmap),
     m_dragging(false),
     m_offset(),
+    m_menu(new QMenu(this)),
     m_toolbar(new QToolBar(this)),
     QWidget(parent),
     m_zoomFactor(1.0),
@@ -26,8 +29,10 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     ui->setupUi(this);
     //this->setAttribute(Qt::WA_DeleteOnClose);
     //设置无边框,保持顶部窗口状态
-    this->setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
-    this->setContextMenuPolicy(Qt::ActionsContextMenu);
+    this->setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint|Qt::Window);
+
+    m_menu = new QMenu(this);
+
     QAction* action1 = new QAction("close", this);
     QAction* action2 = new QAction("save", this);
     QAction* action3 = new QAction("copy to clipboard", this);
@@ -46,10 +51,27 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         QApplication::clipboard()->setPixmap(m_pixmap);
         this->close();
         });
-    this->addAction(action1);
-    this->addAction(action2);
-    this->addAction(action3);
+    m_menu->addAction(action1);
+    m_menu->addAction(action2);
+    m_menu->addAction(action3);
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
 
+    connect(this, &QWidget::customContextMenuRequested, this, [&](const QPoint &pos) {
+        m_menu->exec(mapToGlobal(pos));
+        });
+
+    m_menu->setWindowFlags(m_menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+    //translucent 透明的,通过透明可实现圆角
+    m_menu->setAttribute(Qt::WA_TranslucentBackground, true);
+
+    //blurEffect模糊效果 DropShadowEffect阴影效果
+    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(this);
+    shadow->setOffset(0, 0);
+    shadow->setColor(QColor("#444444"));
+    shadow->setBlurRadius(10);
+    m_menu->setGraphicsEffect(shadow);
+
+    this->installEventFilter(this);
 }
 
 PicView::~PicView()
@@ -64,9 +86,9 @@ void PicView::InitToolBar()
 
 void PicView::paintEvent(QPaintEvent* event)
 {
-    qDebug() << "fixed display drawing";
     QPainter painter(this);
-    painter.drawPixmap(0, 0, m_pixmap);
+    QPixmap scaledPixmap = m_pixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    painter.drawPixmap(0, 0, scaledPixmap);
     QPen pen;
     pen.setColor(Qt::red);
     painter.setPen(pen);
@@ -80,7 +102,7 @@ void PicView::ShowPic(QPixmap pixmap)
     this->m_pixmap = pixmap;
     if (!m_pixmap.isNull())
     {
-        this->setFixedSize(pixmap.size());
+        this->setMinimumSize(pixmap.size());
 		this->show();
 		return;
     }
@@ -127,12 +149,39 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
 
 void PicView::focusOutEvent(QFocusEvent* event)
 {
-    event->ignore();
+    
 }
 
 void PicView::focusInEvent(QFocusEvent* event)
 {
-    qDebug() << "获取焦点";
+    
+}
+
+void PicView::leaveEvent(QEvent* event)
+{
+    clearFocus();
+}
+
+void PicView::enterEvent(QEvent* event)
+{
+    setFocus();
+}
+
+bool PicView::eventFilter(QObject* obj, QEvent* event)
+{
+    if (event->type() == QEvent::ContextMenu)
+    {
+        QMenu* menu = qobject_cast<QMenu*>(obj);
+        if (menu!=nullptr)
+        {
+            menu->setWindowFlags(menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+            menu->setAttribute(Qt::WA_TranslucentBackground, true);
+            QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(this);
+            shadow->setOffset(0, 0);
+            shadow->setColor(QColor("#444444"));
+        }
+    }
+    return false;
 }
 
 void PicView::closeEvent(QCloseEvent* event)
@@ -154,12 +203,38 @@ void PicView::closeEvent(QCloseEvent* event)
 
 void PicView::wheelEvent(QWheelEvent* event)
 {
-    double delta = event->angleDelta().y() > 0 ? 0.1 : -0.1;
-    SetZoomFactor(m_zoomFactor + delta);
+    if (event->modifiers() & Qt::ControlModifier)
+    {
+        int incrementHValue = static_cast<int>(height() * 0.1);
+        int incrementWValue = static_cast<int>(width() * 0.1);
+
+        int incrementH = event->angleDelta().y() > 0 ? incrementHValue : 0 - incrementHValue;
+        int incrementW = event->angleDelta().y() > 0 ? incrementWValue : 0 - incrementWValue;
+        int newH = incrementH + this->height();
+        int newW = incrementW + this->width();
+
+
+        //保持窗口中心位置不变
+        QPoint oldCenter = geometry().center();
+        resize(newW, newH);
+        QRect newGeometry = geometry();
+        newGeometry.moveCenter(oldCenter);
+
+        setGeometry(newGeometry);
+
+        //设置平滑动画效果
+        QPropertyAnimation* animation = new QPropertyAnimation(this, "size");
+        animation->setDuration(200);
+        animation->setStartValue(size());
+        animation->setEndValue(QSize(newW,newH));
+        animation->setEasingCurve(QEasingCurve::OutQuad);
+        animation->start(QPropertyAnimation::DeleteWhenStopped);
+
+        event->accept();
+    }
 }
 
 void PicView::SetZoomFactor(double factor)
 {
-    m_zoomFactor = qBound(0.1, factor, 10.0);
-    update();
+  
 }
