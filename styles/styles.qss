@@ -1,0 +1,24 @@
+QMenu {
+	color:black;
+	background-color:white; 
+	border-radius:3px;
+	padding:5px;
+	margin:6px;
+}
+QMenu::item:text { 
+	padding-left:10px;
+	padding-right:10px;
+}
+QMenu::item:selected{ 
+	color:white;
+	background-color:green;
+	border-radius:3px;
+}
+QMenu::separator{
+	height:1px;
+	background:#bbbbbb;
+	margin:5px;
+	margin-left:10px;
+	margin-right:10px;
+}
+ 
