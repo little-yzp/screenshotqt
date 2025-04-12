@@ -47,8 +47,21 @@ private:
     QMenu* m_menu;
     double m_zoomFactor;//实现图片的放大缩小
 
-    void SetZoomFactor(double factor);
-   
+    //图片矩形绘制
+    bool m_bDrawRectStart;
+    QPoint m_rectStartPos;
+    QPoint m_rectEndPos; 
+
+    //绘图撤销功能
+    QList<QPixmap> m_history;
+    QList<QPixmap> m_redoStack;
+
+    QList<QPoint> m_historyEndPos;
+    QList<QPoint> m_redoStackEndPos;
+
+    void saveState();
+    void undo(); //撤销
+    void redo(); //恢复
 };
 
 #endif // PICVIEW_H

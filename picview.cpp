@@ -22,8 +22,11 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_offset(),
     m_menu(new QMenu(this)),
     m_toolbar(new QToolBar(this)),
+    m_bDrawRectStart(false),
     QWidget(parent),
     m_zoomFactor(1.0),
+    m_rectEndPos(0,0),
+    m_rectStartPos(0,0),
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
@@ -36,6 +39,10 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     QAction* action1 = new QAction("close", this);
     QAction* action2 = new QAction("save", this);
     QAction* action3 = new QAction("copy to clipboard", this);
+    QAction* action4 = new QAction("draw rect", this);
+    QAction* action5 = new QAction("undo", this);
+    QAction* action6 = new QAction("redo", this);
+
     connect(action1, &QAction::triggered, this, &QWidget::close);
     connect(action2, &QAction::triggered, this, [&]() {
         QString FullPathName=QFileDialog::getSaveFileName(nullptr,"picture saving",SnipasteApp::getLastOpenDir(),tr("*.png"));
@@ -51,9 +58,21 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         QApplication::clipboard()->setPixmap(m_pixmap);
         this->close();
         });
+    connect(action4, &QAction::triggered, this, [&]() {
+        m_bDrawRectStart = true;
+        });
+    connect(action5, &QAction::triggered, this, [&]() {
+        undo();
+        });
+    connect(action6, &QAction::triggered, this, [&]() {
+        redo();
+        });
     m_menu->addAction(action1);
     m_menu->addAction(action2);
     m_menu->addAction(action3);
+    m_menu->addAction(action4);
+    m_menu->addAction(action5);
+    m_menu->addAction(action6);
     this->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(this, &QWidget::customContextMenuRequested, this, [&](const QPoint &pos) {
@@ -70,6 +89,8 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     shadow->setColor(QColor("#444444"));
     shadow->setBlurRadius(10);
     m_menu->setGraphicsEffect(shadow);
+
+    this->setGraphicsEffect(shadow);
 
     this->installEventFilter(this);
 }
@@ -92,14 +113,20 @@ void PicView::paintEvent(QPaintEvent* event)
     QPen pen;
     pen.setColor(Qt::red);
     painter.setPen(pen);
-    //绘制截图边框
-    painter.drawRect(0, 0, this->width()-1,this->height()-1);
-}
 
+    //绘制截图边框
+    /*painter.drawRect(0, 0, this->width()-1,this->height()-1);*/
+
+    if (m_bDrawRectStart)
+    {
+        painter.drawRect(QRect(m_rectStartPos, m_rectEndPos));
+    }
+}
 
 void PicView::ShowPic(QPixmap pixmap)
 {
     this->m_pixmap = pixmap;
+    saveState();
     if (!m_pixmap.isNull())
     {
         this->setMinimumSize(pixmap.size());
@@ -113,8 +140,16 @@ void PicView::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        m_dragging = true;
+       
         m_offset = event->globalPos()-pos();
+        if (m_bDrawRectStart)
+        {
+            m_rectStartPos = event->pos();
+        }
+        else
+        {
+            m_dragging = true;
+        }
     }
 }
 
@@ -136,7 +171,13 @@ void PicView::mouseMoveEvent(QMouseEvent* event)
     else
     {
         qDebug() << "Mouse is inside";
-    }  
+    }
+
+    if (m_bDrawRectStart)
+    {
+        m_rectEndPos = event->pos();
+        update();
+    }
 }
 
 void PicView::mouseReleaseEvent(QMouseEvent* event)
@@ -144,6 +185,11 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton)
     {
         m_dragging = false;
+        if (m_bDrawRectStart)
+        {
+            this->saveState();
+            m_bDrawRectStart = false;
+        }
     }
 }
 
@@ -234,7 +280,34 @@ void PicView::wheelEvent(QWheelEvent* event)
     }
 }
 
-void PicView::SetZoomFactor(double factor)
+void PicView::saveState()
 {
-  
+    QPixmap tmpPix = this->grab(this->geometry());
+    qDebug() <<"saveState:"<< tmpPix.size();
+    qDebug() << "widgetSize:" << this->size();
+    m_history.append(tmpPix);
+    m_historyEndPos.append(m_rectEndPos);
+    m_redoStackEndPos.clear();
+    m_redoStack.clear();
+}
+
+void PicView::undo() 
+{
+    if (m_history.size() <= 1)return;
+
+    m_redoStack.append(m_history.takeLast());
+    m_redoStackEndPos.append(m_historyEndPos.takeLast());
+    m_rectEndPos = m_historyEndPos.last();
+    m_pixmap = m_history.last().copy();
+    update();
+}
+
+void PicView::redo()
+{
+    if (m_redoStack.isEmpty()) return;
+    m_rectEndPos = m_redoStackEndPos.takeLast();
+    m_historyEndPos.append(m_rectEndPos);
+    m_pixmap = m_redoStack.takeLast();
+    m_history.append(m_pixmap.copy());
+    update();
 }
