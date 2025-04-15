@@ -93,6 +93,9 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     this->setGraphicsEffect(shadow);
 
     this->installEventFilter(this);
+
+    this->setWindowTitle(QString("%1").arg(this->winId()));
+
 }
 
 PicView::~PicView()
@@ -108,6 +111,7 @@ void PicView::InitToolBar()
 void PicView::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
+    //Qt::KeepAspectRatio 保持长宽比
     QPixmap scaledPixmap = m_pixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     painter.drawPixmap(0, 0, scaledPixmap);
     QPen pen;
@@ -117,20 +121,17 @@ void PicView::paintEvent(QPaintEvent* event)
     //绘制截图边框
     /*painter.drawRect(0, 0, this->width()-1,this->height()-1);*/
 
-    if (m_bDrawRectStart)
-    {
-        painter.drawRect(QRect(m_rectStartPos, m_rectEndPos));
-    }
+    painter.drawRect(QRect(m_rectStartPos, m_rectEndPos));
 }
 
 void PicView::ShowPic(QPixmap pixmap)
 {
     this->m_pixmap = pixmap;
-    saveState();
     if (!m_pixmap.isNull())
     {
         this->setMinimumSize(pixmap.size());
 		this->show();
+        saveState();
 		return;
     }
     qDebug() << "pixels were null";
@@ -282,7 +283,9 @@ void PicView::wheelEvent(QWheelEvent* event)
 
 void PicView::saveState()
 {
-    QPixmap tmpPix = this->grab(this->geometry());
+    QPixmap tmpPix;
+    this->render(&tmpPix);
+
     qDebug() <<"saveState:"<< tmpPix.size();
     qDebug() << "widgetSize:" << this->size();
     m_history.append(tmpPix);
