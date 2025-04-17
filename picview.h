@@ -9,6 +9,9 @@ namespace Ui {
 class PicView;
 }
 
+class Shape;
+class ShapeRect;
+
 class PicView : public QWidget
 {
     Q_OBJECT
@@ -62,6 +65,8 @@ private:
     void saveState();
     void undo(); //撤销
     void redo(); //恢复
+
+    QList<Shape*>m_shapeList;
 };
 
 #endif // PICVIEW_H

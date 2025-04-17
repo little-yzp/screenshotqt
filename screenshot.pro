@@ -29,22 +29,19 @@ SOURCES += \
     snipasteapp.cpp \
     picview.cpp \
     transparentmask.cpp \
-    tipwh.cpp
+    shape.cpp
 
 HEADERS += \
     snipasteapp.h \
     picview.h \
     transparentmask.h\
     shortcutfilter.h \
-# vld.h \
-# vld_def.h
-    tipwh.h
+    shape.h
 
 
 FORMS += \
     picview.ui \
-    transparentmask.ui \
-    tipwh.ui
+    transparentmask.ui
 
 # LIBS += $$PWD/lib/vld.lib
 

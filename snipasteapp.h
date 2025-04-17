@@ -6,7 +6,6 @@
 #include <QPointer>
 #include "transparentmask.h"
 #include "picview.h"
-#include "tipwh.h"
 #include <QShortCut>
 class PicView;//前向声明
 
@@ -31,7 +30,6 @@ private:
     QPointer<QSystemTrayIcon>sysMenu;
     QPointer<QMenu>m_menu;
     QPointer<QToolBar>m_toolBar;
-    QPointer<Tipwh>m_tipwh;
     void InitMenu();
     void InitToolBar();
     QPointer<TransparentMask>m_transparentMask;

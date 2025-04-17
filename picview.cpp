@@ -1,5 +1,6 @@
 ﻿#include "picview.h"
 #include "snipasteapp.h"
+#include "shape.h"
 #include "ui_picview.h"
 
 #include <QPixmap>
@@ -120,8 +121,14 @@ void PicView::paintEvent(QPaintEvent* event)
 
     //绘制截图边框
     /*painter.drawRect(0, 0, this->width()-1,this->height()-1);*/
-
-    painter.drawRect(QRect(m_rectStartPos, m_rectEndPos));
+    for (int i = 0; i < m_shapeList.length(); i++)
+    {
+        ShapeRect* tmpRect = dynamic_cast<ShapeRect*>(m_shapeList.at(i));
+        if (tmpRect != NULL)
+        {
+            painter.drawRect(QRect(tmpRect->m_topLeft, tmpRect->m_rightBottom));
+        }
+    }
 }
 
 void PicView::ShowPic(QPixmap pixmap)
@@ -145,7 +152,9 @@ void PicView::mousePressEvent(QMouseEvent* event)
         m_offset = event->globalPos()-pos();
         if (m_bDrawRectStart)
         {
-            m_rectStartPos = event->pos();
+            Shape* tmp = new ShapeRect;
+            tmp->m_topLeft = event->pos();
+            m_shapeList.push_back(tmp);
         }
         else
         {
@@ -176,7 +185,7 @@ void PicView::mouseMoveEvent(QMouseEvent* event)
 
     if (m_bDrawRectStart)
     {
-        m_rectEndPos = event->pos();
+       m_shapeList.last()->m_rightBottom = event->pos();
         update();
     }
 }
@@ -296,13 +305,10 @@ void PicView::saveState()
 
 void PicView::undo() 
 {
-    if (m_history.size() <= 1)return;
+    if (m_shapeList.count() < 0)return;
 
-    m_redoStack.append(m_history.takeLast());
-    m_redoStackEndPos.append(m_historyEndPos.takeLast());
-    m_rectEndPos = m_historyEndPos.last();
-    m_pixmap = m_history.last().copy();
-    update();
+    
+
 }
 
 void PicView::redo()
