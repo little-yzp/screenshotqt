@@ -32,7 +32,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
-    //this->setAttribute(Qt::WA_DeleteOnClose);
+    this->setAttribute(Qt::WA_DeleteOnClose);
     //设置无边框,保持顶部窗口状态
     this->setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint|Qt::Window);
 
@@ -126,12 +126,17 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     this->installEventFilter(this);
 
     this->setWindowTitle(QString("%1").arg(this->winId()));
+    this->setAttribute(Qt::WA_InputMethodEnabled, true);
 
 }
 
 PicView::~PicView()
 {
     qDebug() << "picview obj were deleted"<<this->winId();
+    for (int i = 0; i < m_shapeList.length(); i++)
+    {
+        delete m_shapeList.at(i);
+    }
     delete ui;
 }
 
@@ -149,8 +154,13 @@ void PicView::paintEvent(QPaintEvent* event)
     pen.setColor(Qt::red);
     painter.setPen(pen);
 
+    painter.save();
+    pen.setColor(Qt::green);
+    painter.setPen(pen);
     //绘制截图边框
-    /*painter.drawRect(0, 0, this->width()-1,this->height()-1);*/
+    painter.drawRect(0, 0, this->width()-1,this->height()-1);
+    painter.restore();
+
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     for (int i = 0; i < m_shapeList.length(); i++)
@@ -183,12 +193,11 @@ void PicView::paintEvent(QPaintEvent* event)
         ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.at(i));
         if (tmpText != NULL)
         {
-            painter.drawRect(QRectF(tmpText->m_topLeft, tmpText->m_topLeft + QPoint(100, 100)));
+            qDebug() << QApplication::font();
+            painter.drawRect(QRectF(tmpText->m_topLeft, QSizeF(QApplication::font().pixelSize(),QApplication::font().pixelSize())));
             painter.drawText(tmpText->m_topLeft, tmpText->text);
         }
-    }
-
-    
+    }  
 }
 
 void PicView::ShowPic(QPixmap pixmap)
@@ -198,7 +207,6 @@ void PicView::ShowPic(QPixmap pixmap)
     {
         this->setMinimumSize(pixmap.size());
 		this->show();
-        saveState();
 		return;
     }
     qDebug() << "pixels were null";
@@ -305,7 +313,13 @@ void PicView::inputMethodEvent(QInputMethodEvent* event)
     if (!event->commitString().isEmpty()&&m_bInputText==true)
     {
         QString text = event->commitString();
-        qDebug() << text;
+        ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
+        if (tmpText != NULL)
+        {
+            tmpText->text.append(text);
+            update();
+        }
+        
     }
     event->accept();
 }
@@ -332,16 +346,16 @@ void PicView::enterEvent(QEvent* event)
 
 bool PicView::eventFilter(QObject* obj, QEvent* event)
 {
-    if (event->type() == QEvent::ContextMenu)
+    if (event->type() == QEvent::KeyPress)
     {
-        QMenu* menu = qobject_cast<QMenu*>(obj);
-        if (menu!=nullptr)
+        QKeyEvent* keyevent = static_cast<QKeyEvent*>(event);
+        if (keyevent->key() == Qt::Key_Escape)
         {
-            menu->setWindowFlags(menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
-            menu->setAttribute(Qt::WA_TranslucentBackground, true);
-            QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(this);
-            shadow->setOffset(0, 0);
-            shadow->setColor(QColor("#444444"));
+            this->close();
+        }
+        if (keyevent->modifiers() == Qt::ControlModifier && keyevent->key() == Qt::Key_Z)
+        {
+            undo();
         }
     }
     return false;
