@@ -24,5 +24,25 @@ public:
     ~ShapeRect();
 };
 
+class ShapeEillpse :public Shape
+{
+    Q_OBJECT
+public:
+    ShapeEillpse(QObject* parent = nullptr);
+    ~ShapeEillpse();
+
+};
+
+class ShapeLine :public Shape
+{
+    Q_OBJECT
+};
+
+class ShapeText :public Shape
+{
+    Q_OBJECT
+public:
+    QString text;
+};
 #endif // Shape_H
 

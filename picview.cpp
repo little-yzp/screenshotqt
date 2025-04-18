@@ -24,10 +24,11 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_menu(new QMenu(this)),
     m_toolbar(new QToolBar(this)),
     m_bDrawRectStart(false),
+    m_bDrawEllipse(false),
+    m_bDrawLine(false),
+    m_bInputText(false),
     QWidget(parent),
     m_zoomFactor(1.0),
-    m_rectEndPos(0,0),
-    m_rectStartPos(0,0),
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
@@ -43,6 +44,9 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     QAction* action4 = new QAction("draw rect", this);
     QAction* action5 = new QAction("undo", this);
     QAction* action6 = new QAction("redo", this);
+    QAction* action7 = new QAction("draw Eillpse", this);
+    QAction* action8 = new QAction("draw straight Line", this);
+    QAction* action9 = new QAction("inputText", this);
 
     connect(action1, &QAction::triggered, this, &QWidget::close);
     connect(action2, &QAction::triggered, this, [&]() {
@@ -55,12 +59,14 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         SnipasteApp::setLastOpenDir(FullPathName.left(FullPathName.lastIndexOf('/')));
         this->close();
         });
+
     connect(action3, &QAction::triggered, this, [&]() {
-        QApplication::clipboard()->setPixmap(m_pixmap);
-        this->close();
+        snapshot();
         });
     connect(action4, &QAction::triggered, this, [&]() {
         m_bDrawRectStart = true;
+        m_bDrawEllipse = false;
+        m_bDrawLine = false;
         });
     connect(action5, &QAction::triggered, this, [&]() {
         undo();
@@ -68,14 +74,38 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     connect(action6, &QAction::triggered, this, [&]() {
         redo();
         });
+    connect(action7, &QAction::triggered, this, [&]() {
+        m_bDrawEllipse = true;
+        m_bDrawRectStart = false;
+        m_bDrawLine = false;
+        });
+    connect(action8, &QAction::triggered, this, [&]() {
+        m_bDrawLine = true;
+        m_bDrawRectStart = false;
+        m_bDrawEllipse = false;
+        });
+    connect(action9, &QAction::triggered, this, [&]() {
+        m_bInputText = true;
+        m_bDrawLine = false;
+        m_bDrawRectStart = false;
+        m_bDrawEllipse = false;
+        });
+
     m_menu->addAction(action1);
     m_menu->addAction(action2);
     m_menu->addAction(action3);
+    m_menu->addSeparator();
+    m_menu->addAction(action7);
+    m_menu->addAction(action8);
     m_menu->addAction(action4);
+    m_menu->addAction(action9);
+    m_menu->addSeparator();
     m_menu->addAction(action5);
     m_menu->addAction(action6);
-    this->setContextMenuPolicy(Qt::CustomContextMenu);
 
+
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    
     connect(this, &QWidget::customContextMenuRequested, this, [&](const QPoint &pos) {
         m_menu->exec(mapToGlobal(pos));
         });
@@ -121,6 +151,8 @@ void PicView::paintEvent(QPaintEvent* event)
 
     //绘制截图边框
     /*painter.drawRect(0, 0, this->width()-1,this->height()-1);*/
+    painter.setRenderHint(QPainter::Antialiasing, true);
+
     for (int i = 0; i < m_shapeList.length(); i++)
     {
         ShapeRect* tmpRect = dynamic_cast<ShapeRect*>(m_shapeList.at(i));
@@ -128,7 +160,35 @@ void PicView::paintEvent(QPaintEvent* event)
         {
             painter.drawRect(QRect(tmpRect->m_topLeft, tmpRect->m_rightBottom));
         }
+
+        ShapeEillpse* tmpEillpse = dynamic_cast<ShapeEillpse*>(m_shapeList.at(i));
+        if (tmpEillpse != NULL)
+        {
+            QPointF center((tmpEillpse->m_topLeft.x() + tmpEillpse->m_rightBottom.x()) / 2.0,
+                (tmpEillpse->m_topLeft.y() + tmpEillpse->m_rightBottom.y()) / 2.0);
+            qreal rx = (qreal)abs(
+                (tmpEillpse->m_topLeft.x() - tmpEillpse->m_rightBottom.x()) / 2.0
+            );
+            qreal ry = (qreal)abs(
+                (tmpEillpse->m_topLeft.y() - tmpEillpse->m_rightBottom.y()) / 2.0
+            );
+            painter.drawEllipse(center,rx,ry);
+        }
+        
+        ShapeLine* tmpLine = dynamic_cast<ShapeLine*>(m_shapeList.at(i));
+        if (tmpLine != NULL)
+        {
+            painter.drawLine(tmpLine->m_topLeft, tmpLine->m_rightBottom);
+        }
+        ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.at(i));
+        if (tmpText != NULL)
+        {
+            painter.drawRect(QRectF(tmpText->m_topLeft, tmpText->m_topLeft + QPoint(100, 100)));
+            painter.drawText(tmpText->m_topLeft, tmpText->text);
+        }
     }
+
+    
 }
 
 void PicView::ShowPic(QPixmap pixmap)
@@ -155,6 +215,25 @@ void PicView::mousePressEvent(QMouseEvent* event)
             Shape* tmp = new ShapeRect;
             tmp->m_topLeft = event->pos();
             m_shapeList.push_back(tmp);
+        }
+        else if (m_bDrawEllipse)
+        {
+            Shape* tmp = new ShapeEillpse;
+            tmp->m_topLeft = event->pos();
+            m_shapeList.push_back(tmp);
+        }
+        else if (m_bDrawLine)
+        {
+            Shape* tmp = new ShapeLine;
+            tmp->m_topLeft = event->pos();
+            m_shapeList.push_back(tmp);
+        }
+        else if (m_bInputText)
+        {
+            Shape* tmp = new ShapeText;
+            tmp->m_topLeft = event->pos();
+            m_shapeList.push_back(tmp);
+            update();
         }
         else
         {
@@ -186,6 +265,16 @@ void PicView::mouseMoveEvent(QMouseEvent* event)
     if (m_bDrawRectStart)
     {
        m_shapeList.last()->m_rightBottom = event->pos();
+       update();
+    }
+    else if (m_bDrawEllipse)
+    {
+        m_shapeList.last()->m_rightBottom = event->pos();
+        update();
+    }
+    else if (m_bDrawLine)
+    {
+        m_shapeList.last()->m_rightBottom = event->pos();
         update();
     }
 }
@@ -200,7 +289,25 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
             this->saveState();
             m_bDrawRectStart = false;
         }
+        else if (m_bDrawEllipse)
+        {
+            m_bDrawEllipse = false;
+        }
+        else if (m_bDrawLine)
+        {
+            m_bDrawLine = false;
+        }
     }
+}
+
+void PicView::inputMethodEvent(QInputMethodEvent* event)
+{
+    if (!event->commitString().isEmpty()&&m_bInputText==true)
+    {
+        QString text = event->commitString();
+        qDebug() << text;
+    }
+    event->accept();
 }
 
 void PicView::focusOutEvent(QFocusEvent* event)
@@ -292,31 +399,26 @@ void PicView::wheelEvent(QWheelEvent* event)
 
 void PicView::saveState()
 {
-    QPixmap tmpPix;
-    this->render(&tmpPix);
-
-    qDebug() <<"saveState:"<< tmpPix.size();
-    qDebug() << "widgetSize:" << this->size();
-    m_history.append(tmpPix);
-    m_historyEndPos.append(m_rectEndPos);
-    m_redoStackEndPos.clear();
-    m_redoStack.clear();
 }
 
 void PicView::undo() 
 {
     if (m_shapeList.count() < 0)return;
-
-    
-
 }
 
 void PicView::redo()
 {
-    if (m_redoStack.isEmpty()) return;
-    m_rectEndPos = m_redoStackEndPos.takeLast();
-    m_historyEndPos.append(m_rectEndPos);
-    m_pixmap = m_redoStack.takeLast();
-    m_history.append(m_pixmap.copy());
     update();
+}
+
+void PicView::snapshot()
+{
+    QScreen* screen = QGuiApplication::primaryScreen();
+    if (!screen)
+    {
+        return;
+    }
+    QPixmap pixmap = screen->grabWindow(this->winId());
+    QApplication::clipboard()->setPixmap(pixmap);
+    this->close();
 }

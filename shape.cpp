@@ -18,3 +18,11 @@ ShapeRect::ShapeRect(QObject*obj)
 ShapeRect::~ShapeRect()
 {
 }
+
+ShapeEillpse::~ShapeEillpse()
+{
+}
+ShapeEillpse::ShapeEillpse(QObject* parent)
+{
+
+}

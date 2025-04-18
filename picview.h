@@ -26,6 +26,7 @@ public:
     void mousePressEvent(QMouseEvent* event)override;
     void mouseMoveEvent(QMouseEvent*event)override;
     void mouseReleaseEvent(QMouseEvent* event)override;
+    void inputMethodEvent(QInputMethodEvent* event)override;
 
     void closeEvent(QCloseEvent* event)override;
     void wheelEvent(QWheelEvent* event)override;
@@ -52,21 +53,22 @@ private:
 
     //图片矩形绘制
     bool m_bDrawRectStart;
-    QPoint m_rectStartPos;
-    QPoint m_rectEndPos; 
 
-    //绘图撤销功能
-    QList<QPixmap> m_history;
-    QList<QPixmap> m_redoStack;
+    //圆形绘制
+    bool m_bDrawEllipse;
 
-    QList<QPoint> m_historyEndPos;
-    QList<QPoint> m_redoStackEndPos;
+    //直线绘制
+    bool m_bDrawLine;
+
+    //文字输入
+    bool m_bInputText;
 
     void saveState();
     void undo(); //撤销
     void redo(); //恢复
 
     QList<Shape*>m_shapeList;
+    void snapshot();
 };
 
 #endif // PICVIEW_H
