@@ -1,0 +1,2 @@
+#define OCRDLL_API __declspec(dllexport)
+#define OCRDLL_API __declspec(dllimport)
