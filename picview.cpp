@@ -48,6 +48,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     QAction* action7 = new QAction("draw Eillpse", this);
     QAction* action8 = new QAction("draw straight Line", this);
     QAction* action9 = new QAction("inputText", this);
+    QAction* action10 = new QAction("Text recognition", this);
 
     connect(action1, &QAction::triggered, this, &QWidget::close);
     connect(action2, &QAction::triggered, this, [&]() {
@@ -96,7 +97,8 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         m_bDrawEllipse = false;
         QApplication::setOverrideCursor(Qt::CrossCursor);
         });
-
+    connect(action10, &QAction::triggered, this, [&]() {
+        });
     m_menu->addAction(action1);
     m_menu->addAction(action2);
     m_menu->addAction(action3);
@@ -108,6 +110,8 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_menu->addSeparator();
     m_menu->addAction(action5);
     m_menu->addAction(action6);
+    m_menu->addSeparator();
+    m_menu->addAction(action10);
 
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);

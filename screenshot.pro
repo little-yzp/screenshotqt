@@ -36,7 +36,8 @@ HEADERS += \
     picview.h \
     transparentmask.h\
     shortcutfilter.h \
-    shape.h
+    shape.h \
+    Ocrlib/include/*.h
 
 
 FORMS += \
@@ -44,6 +45,7 @@ FORMS += \
     transparentmask.ui
 
 # LIBS += $$PWD/lib/vld.lib
+LIBS += Ocrlib/lib/RapidOcrOnnx.lib
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
