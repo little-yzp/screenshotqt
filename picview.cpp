@@ -12,6 +12,7 @@
 #include <QMouseEvent>
 #include <QGraphicsDropShadowEffect>
 #include <qpropertyanimation.h>
+#include <QApplication>
 
 PicView::PicView(QWidget *parent) :PicView(QPixmap(), nullptr)
 {
@@ -67,6 +68,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         m_bDrawRectStart = true;
         m_bDrawEllipse = false;
         m_bDrawLine = false;
+        QApplication::setOverrideCursor(Qt::CrossCursor);
         });
     connect(action5, &QAction::triggered, this, [&]() {
         undo();
@@ -78,17 +80,21 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         m_bDrawEllipse = true;
         m_bDrawRectStart = false;
         m_bDrawLine = false;
+        QApplication::setOverrideCursor(Qt::CrossCursor);
+
         });
     connect(action8, &QAction::triggered, this, [&]() {
         m_bDrawLine = true;
         m_bDrawRectStart = false;
         m_bDrawEllipse = false;
+        QApplication::setOverrideCursor(Qt::CrossCursor);
         });
     connect(action9, &QAction::triggered, this, [&]() {
         m_bInputText = true;
         m_bDrawLine = false;
         m_bDrawRectStart = false;
         m_bDrawEllipse = false;
+        QApplication::setOverrideCursor(Qt::CrossCursor);
         });
 
     m_menu->addAction(action1);
@@ -147,7 +153,7 @@ void PicView::InitToolBar()
 void PicView::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
-    //Qt::KeepAspectRatio 保持长宽比
+    //Qt::KeepAspectRatio 保持长宽比,保持图片与QWidget大小一致
     QPixmap scaledPixmap = m_pixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     painter.drawPixmap(0, 0, scaledPixmap);
     QPen pen;
@@ -305,6 +311,7 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
         {
             m_bDrawLine = false;
         }
+        QApplication::restoreOverrideCursor();
     }
 }
 
