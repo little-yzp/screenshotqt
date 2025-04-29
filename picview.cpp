@@ -2,6 +2,7 @@
 #include "snipasteapp.h"
 #include "shape.h"
 #include "ui_picview.h"
+#include "OcrLib/include/OcrLiteCApi.h"
 
 #include <QPixmap>
 #include <QPainter>
@@ -16,6 +17,8 @@
 
 PicView::PicView(QWidget *parent) :PicView(QPixmap(), nullptr)
 {
+    m_font.setFamily("宋体");
+    m_font.setPointSize(20);
 }
 
 PicView::PicView(QPixmap pixmap, QWidget* parent) :
@@ -98,6 +101,18 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         QApplication::setOverrideCursor(Qt::CrossCursor);
         });
     connect(action10, &QAction::triggered, this, [&]() {
+        OCR_PARAM params = { 0 };
+        //先判断文件是否存在
+        QFile file(QDir::toNativeSeparators(QApplication::applicationDirPath()+ SnipasteApp::s_cachePath.append(QString("%1.png").arg(this->winId()))));
+        if (!file.exists())
+        {
+            qDebug() << "file is not exists";
+            return;
+        }
+        QFileInfo fileInfo(file);
+       
+        char *result=MYOCR::Detect(SnipasteApp::s_handle, QDir::toNativeSeparators(fileInfo.absolutePath().append("\\")).toStdString().c_str(), QString("%1.png").arg(this->winId()).toStdString().c_str(), &params);
+        qDebug() << result;
         });
     m_menu->addAction(action1);
     m_menu->addAction(action2);
@@ -111,7 +126,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_menu->addAction(action5);
     m_menu->addAction(action6);
     m_menu->addSeparator();
-    m_menu->addAction(action10);
+    m_menu->addAction(action10); 
 
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -203,9 +218,16 @@ void PicView::paintEvent(QPaintEvent* event)
         ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.at(i));
         if (tmpText != NULL)
         {
-            qDebug() << QApplication::font();
-            painter.drawRect(QRectF(tmpText->m_topLeft, QSizeF(QApplication::font().pixelSize(),QApplication::font().pixelSize())));
-            painter.drawText(tmpText->m_topLeft, tmpText->text);
+            int fontSize = QApplication::font().pixelSize();
+            qDebug() << "系统字体大小:" << fontSize;
+            if (tmpText->text.isEmpty())
+            {
+                painter.drawRect(QRectF(tmpText->m_topLeft, QSizeF(tmpText->m_topLeft.x() + 20, tmpText->m_topLeft.y() + fontSize)));
+            }
+            else
+            {
+                painter.drawText(tmpText->m_topLeft, tmpText->text);
+            }
         }
     }  
 }
@@ -217,6 +239,14 @@ void PicView::ShowPic(QPixmap pixmap)
     {
         this->setMinimumSize(pixmap.size());
 		this->show();
+
+        QString path = QDir::toNativeSeparators(QApplication::applicationDirPath() + QString("/cache/%1.png").arg(this->winId()));
+        //保存临时文件
+        bool ret=m_pixmap.save(path);
+        if (ret)
+        {
+            qDebug() << "save secusseccfully";
+        }
 		return;
     }
     qDebug() << "pixels were null";

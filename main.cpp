@@ -4,6 +4,7 @@
 #include "picview.h"
 #include "qdebug.h"
 #include "qmessagebox.h"
+#include "util.h"
 #define APP
 
 
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
         qDebug("Failed to register hotkey.");
     }
     a.installNativeEventFilter(&filter);
+
 #else
     QPixmap pixmap(":/icon/icon/testpixmap.jpg");
     //PicView picView(pixmap);
@@ -55,6 +57,7 @@ int main(int argc, char *argv[])
 
 #endif
     //showFullScreen在多屏幕情况下不会显示所有屏幕
+    QMessageBox::information(nullptr, QString("INFO"), QString("screenshot is opened"), QMessageBox::Ok, QMessageBox::NoButton);
     a.exec();
     shareMemory.detach();
     return 0;

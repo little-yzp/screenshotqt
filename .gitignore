@@ -1,5 +1,5 @@
 .vs
-debug
+debug/cache/*
 ui_*
 *.vcxproj*
 .qmake.stash

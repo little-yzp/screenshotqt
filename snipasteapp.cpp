@@ -12,12 +12,22 @@
 #include <QTimer>
 #include "staticdata.h"
 
+OCR_HANDLE SnipasteApp::s_handle = NULL;
+
 QString SnipasteApp::m_lastOpenDir{ "." };
+
+QString SnipasteApp::s_cachePath("/cache/");
+
 SnipasteApp::SnipasteApp(QObject *parent) : QObject(parent)
                                             ,sysMenu(new QSystemTrayIcon(this))
                                             ,m_transparentMask(new TransparentMask)
 {
     this->sysMenu->setIcon(QIcon(":/icon/icon/icon.svg"));
+    s_handle = MYOCR::Init(QDir::toNativeSeparators(QApplication::applicationDirPath() + QString("/models/ch_PP-OCRv3_det_infer.onnx")).toStdString().c_str(),
+        QDir::toNativeSeparators(QApplication::applicationDirPath() + QString("/models/ch_ppocr_mobile_v2.0_cls_infer.onnx")).toStdString().c_str(),
+        QDir::toNativeSeparators(QApplication::applicationDirPath() + QString("/models/ch_PP-OCRv3_rec_infer.onnx")).toStdString().c_str(),
+        QDir::toNativeSeparators(QApplication::applicationDirPath() + QString("/models/ppocr_keys_v1.txt")).toStdString().c_str());
+
     InitMenu();
     InitToolBar();
     this->sysMenu->show();

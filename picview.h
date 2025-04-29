@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QToolBar>
 #include <QMenu>
+#include <qapplication.h>
+#include "util.h"
+#include <QDir.h>
 
 namespace Ui {
 class PicView;
@@ -50,6 +53,7 @@ private:
     QPoint m_offset;
     QMenu* m_menu;
     double m_zoomFactor;//实现图片的放大缩小
+    QFont m_font;
 
     //图片矩形绘制
     bool m_bDrawRectStart;

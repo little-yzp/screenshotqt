@@ -7,6 +7,7 @@
 #include "transparentmask.h"
 #include "picview.h"
 #include <QShortCut>
+
 class PicView;//前向声明
 
 class SnipasteApp : public QObject
@@ -15,6 +16,10 @@ class SnipasteApp : public QObject
 public:
     explicit SnipasteApp(QObject *parent = nullptr);
     ~SnipasteApp();
+
+    static OCR_HANDLE s_handle;
+
+    static QString s_cachePath;
     void ScreenShotInterface();
     static QString getLastOpenDir();
     static void setLastOpenDir(QString path);
@@ -34,6 +39,7 @@ private:
     void InitToolBar();
     QPointer<TransparentMask>m_transparentMask;
     static QString m_lastOpenDir;
+
 };
 //问题:QPointer与QScopedPointer的区别?
 //体会:QPointer只能保证使用空指针时不会崩溃
