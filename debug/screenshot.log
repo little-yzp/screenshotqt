@@ -1,9 +1,2 @@
-﻿  picview.cpp
-C:\Users\21242\Desktop\pro\screenshotqt\picview.cpp(18,27): warning C4100: “parent”: 未引用的形参
-C:\Users\21242\Desktop\pro\screenshotqt\picview.cpp(172,39): warning C4100: “event”: 未引用的形参
-C:\Users\21242\Desktop\pro\screenshotqt\picview.cpp(368,42): warning C4100: “event”: 未引用的形参
-C:\Users\21242\Desktop\pro\screenshotqt\picview.cpp(373,41): warning C4100: “event”: 未引用的形参
-C:\Users\21242\Desktop\pro\screenshotqt\picview.cpp(378,34): warning C4100: “event”: 未引用的形参
-C:\Users\21242\Desktop\pro\screenshotqt\picview.cpp(383,34): warning C4100: “event”: 未引用的形参
-C:\Users\21242\Desktop\pro\screenshotqt\picview.cpp(388,36): warning C4100: “obj”: 未引用的形参
+﻿  main.cpp
   screenshot.vcxproj -> C:\Users\21242\Desktop\pro\screenshotqt\debug\screenshot.exe
