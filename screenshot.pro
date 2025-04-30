@@ -29,7 +29,9 @@ SOURCES += \
     snipasteapp.cpp \
     picview.cpp \
     transparentmask.cpp \
-    shape.cpp
+    shape.cpp \
+    util.cpp \
+    textshowdialog.cpp
 
 HEADERS += \
     snipasteapp.h \
@@ -37,12 +39,15 @@ HEADERS += \
     transparentmask.h\
     shortcutfilter.h \
     shape.h \
-    Ocrlib/include/*.h
+    Ocrlib/include/*.h \
+    util.h \
+    textshowdialog.h
 
 
 FORMS += \
     picview.ui \
-    transparentmask.ui
+    transparentmask.ui \
+    textshowdialog.ui
 
 # LIBS += $$PWD/lib/vld.lib
 LIBS += Ocrlib/lib/RapidOcrOnnx.lib
