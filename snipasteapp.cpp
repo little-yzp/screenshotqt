@@ -73,6 +73,21 @@ SnipasteApp::~SnipasteApp()
         delete m_toolBar;
     }
     qDebug() << "snipasteapp deleted";
+    //清除缓存
+    QString cachePath = QDir::toNativeSeparators(QApplication::applicationDirPath() + QString("/cache"));
+    QDir dir(cachePath);
+    if (dir.exists())
+    {
+        for (QString filestr : dir.entryList(QDir::Files))
+        {
+            qDebug() << filestr;
+            if (QFile(cachePath+QDir::separator()+filestr).remove())
+            {
+                qDebug() << "is deleted";
+            }
+        }
+    }
+
 }
 void SnipasteApp::ScreenShotInterface()
 {
