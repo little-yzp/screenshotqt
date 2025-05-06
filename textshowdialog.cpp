@@ -14,12 +14,23 @@ TextShowDialog::~TextShowDialog()
 int TextShowDialog::ExecAndRet(char*text)
 {
 	QString htmlStr(text);
+	QStringList strlist = htmlStr.split("\n");
+	int maxLength = INT_MIN;
+	for (QString str : strlist)
+	{
+		int tmpLen = str.length();
+		if (tmpLen > maxLength)
+		{
+			maxLength = tmpLen;
+		}
+	}
 	htmlStr.replace("\n", "<br>");
 	htmlStr.replace("\r", "<br>");
 	QString result = "<body>" + htmlStr + "</body>";
-	QFont font("ËÎÌו", 12);
-	font.setStyleStrategy(QFont::StyleStrategy::PreferAntialias);
+	QFont tmpfont("ËÎÌו", 12);
+	tmpfont.setStyleStrategy(QFont::StyleStrategy::PreferAntialias);
 	ui->textBrowser->setHtml(result);
-	ui->textBrowser->setFont(font);
+	ui->textBrowser->setFont(tmpfont);
+	this->setMinimumWidth(maxLength * QFontMetrics(tmpfont).capHeight());
 	return this->exec();
 }

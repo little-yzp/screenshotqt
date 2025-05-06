@@ -45,11 +45,15 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_menu = new QMenu(this);
 
     QAction* action1 = new QAction(tr("close"), this);
+    action1->setShortcut(QKeySequence(Qt::Key_Escape));
     QAction* action2 = new QAction(tr("save"), this);
+    action2->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
     QAction* action3 = new QAction(tr("copy to clipboard"), this);
     QAction* action4 = new QAction(tr("draw rect"), this);
     QAction* action5 = new QAction(tr("undo"), this);
+    action5->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Z));
     QAction* action6 = new QAction(tr("redo"), this);
+    action6->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     QAction* action7 = new QAction(tr("draw Eillpse"), this);
     QAction* action8 = new QAction(tr("draw straight Line"), this);
     QAction* action9 = new QAction(tr("inputText"), this);
@@ -103,6 +107,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         QApplication::setOverrideCursor(Qt::IBeamCursor);
         });
     connect(action10, &QAction::triggered, this, [&]() {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
         OCR_PARAM params = { 0 };
         //先判断文件是否存在
         QFile file(QDir::toNativeSeparators(QApplication::applicationDirPath()+ SnipasteApp::s_cachePath+QString("%1.png").arg(this->winId())));
@@ -110,13 +115,17 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         qDebug() << fileInfo.absoluteFilePath();
         if (!file.exists())
         {
+            QApplication::restoreOverrideCursor();
             qDebug() << "file is not exists";
             return;
         }
-       
-       
         char *result=MYOCR::Detect(SnipasteApp::s_handle, QDir::toNativeSeparators(fileInfo.absolutePath().append("\\")).toStdString().c_str(), QString("%1.png").arg(this->winId()).toStdString().c_str(), &params);
+        QApplication::restoreOverrideCursor();
         m_textShowDialog->ExecAndRet(result);
+
+        free(result);
+        result = nullptr;
+
         qDebug() << result;
         });
     m_menu->addAction(action1);
@@ -157,6 +166,14 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
 
     this->setWindowTitle(QString("%1").arg(this->winId()));
     this->setAttribute(Qt::WA_InputMethodEnabled, true);
+
+    //保证快捷键生效
+    this->addAction(action2);
+
+    for (QAction* action : m_menu->actions())
+    {
+        action->setShortcutVisibleInContextMenu(true);
+    }
 
 }
 
