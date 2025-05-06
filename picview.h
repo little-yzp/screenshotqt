@@ -8,6 +8,7 @@
 #include "util.h"
 #include <QDir.h>
 #include "textshowdialog.h"
+#include "qtimer.h"
 
 namespace Ui {
 class PicView;
@@ -24,7 +25,6 @@ public:
     explicit PicView(QWidget *parent = nullptr);
     PicView(QPixmap pixmap, QWidget* parent = nullptr);
     ~PicView();
-    void InitToolBar();
     void paintEvent(QPaintEvent* event);
     void ShowPic(QPixmap pixmap);
     void mousePressEvent(QMouseEvent* event)override;
@@ -56,6 +56,10 @@ private:
     double m_zoomFactor;//实现图片的放大缩小
     QFont m_font;
     TextShowDialog* m_textShowDialog;
+    //输入光标
+    QTimer* m_timer;
+    bool m_bCursorVisible;
+    int m_nInputH;
 
     //图片矩形绘制
     bool m_bDrawRectStart;

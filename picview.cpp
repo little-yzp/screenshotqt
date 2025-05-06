@@ -35,6 +35,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     QWidget(parent),
     m_zoomFactor(1.0),
     m_textShowDialog(new TextShowDialog(this)),
+    m_timer(new QTimer(this)),
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
@@ -43,6 +44,9 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     this->setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint|Qt::Window);
 
     m_menu = new QMenu(this);
+    this->setFont(m_font);
+    
+    m_nInputH = this->fontMetrics() .capHeight()*4;
 
     QAction* action1 = new QAction(tr("close"), this);
     action1->setShortcut(QKeySequence(Qt::Key_Escape));
@@ -58,6 +62,14 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     QAction* action8 = new QAction(tr("draw straight Line"), this);
     QAction* action9 = new QAction(tr("inputText"), this);
     QAction* action10 = new QAction(tr("Text recognition"), this);
+
+    connect(m_timer, &QTimer::timeout, this, [&]()
+        {
+            m_bCursorVisible = !m_bCursorVisible;
+            update();
+        });
+
+    m_timer->start(500);
 
     connect(action1, &QAction::triggered, this, &QWidget::close);
     connect(action2, &QAction::triggered, this, [&]() {
@@ -100,11 +112,11 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         QApplication::setOverrideCursor(Qt::CrossCursor);
         });
     connect(action9, &QAction::triggered, this, [&]() {
+        if (m_bInputText == true) return;
         m_bInputText = true;
         m_bDrawLine = false;
         m_bDrawRectStart = false;
         m_bDrawEllipse = false;
-        QApplication::setOverrideCursor(Qt::IBeamCursor);
         });
     connect(action10, &QAction::triggered, this, [&]() {
         QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -187,10 +199,6 @@ PicView::~PicView()
     delete ui;
 }
 
-void PicView::InitToolBar()
-{
-}
-
 void PicView::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
@@ -241,16 +249,18 @@ void PicView::paintEvent(QPaintEvent* event)
         if (tmpText != NULL)
         {
             //无法直接获取pixelSize()大小？？
-            int fontSize = QApplication::font().pointSize();
-            qDebug() << "系统字体大小:" << fontSize;
-            if (tmpText->text.isEmpty())
+            if (m_bInputText==true && (i == m_shapeList.length()-1))
             {
-                painter.drawRect(tmpText->m_topLeft.x(),tmpText->m_topLeft.y(),50*2,fontSize*4);
+                painter.drawRect(tmpText->m_topLeft.x(),tmpText->m_topLeft.y(),50*2,m_nInputH);
+                //绘制光标
+                if (m_bCursorVisible)
+                {
+                    int cursor_x = tmpText->m_topLeft.x()+this->fontMetrics().width(tmpText->text) + 2;
+                    int cursor_y = tmpText->m_topLeft.y() + m_nInputH;
+                    painter.drawLine(cursor_x, tmpText->m_topLeft.y()+5, cursor_x, cursor_y-5);
+                }
             }
-            else
-            {
-                painter.drawText(tmpText->m_topLeft, tmpText->text);
-            }
+            painter.drawText(tmpText->m_topLeft.x(),tmpText->m_topLeft.y()+m_nInputH/2.0, tmpText->text);
         }
     }  
 }
@@ -304,20 +314,22 @@ void PicView::mousePressEvent(QMouseEvent* event)
             Shape* tmp = new ShapeText;
             tmp->m_topLeft = event->pos();
             m_shapeList.push_back(tmp);
+            QApplication::setOverrideCursor(Qt::IBeamCursor);
             update();
         }
         else if (m_bInputText)
         {
-            
+           
             ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
             if(tmpText->text=="")
                 tmpText->m_topLeft = event->pos();
-            else 
+            else
             {
                 Shape* tmp = new ShapeText;
                 tmp->m_topLeft = event->pos();
                 m_shapeList.push_back(tmp);
             }
+            QApplication::setOverrideCursor(Qt::IBeamCursor);
             update();
         }
         else
@@ -388,18 +400,21 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
 
 void PicView::inputMethodEvent(QInputMethodEvent* event)
 {
-    if (!event->commitString().isEmpty()&&m_bInputText==true)
+    if (m_bInputText == true)
     {
-        QString text = event->commitString();
         ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
-        if (tmpText != NULL)
+        if (!event->commitString().isEmpty())
         {
-            tmpText->text.append(text);
-            m_bInputText = false;
-            update();
+            QString text = event->commitString();
+            if (tmpText != NULL)
+            {
+                tmpText->text.append(text);
+                update();
+            }
+
         }
-        
     }
+   
     event->accept();
 }
 
@@ -439,6 +454,33 @@ bool PicView::eventFilter(QObject* obj, QEvent* event)
         if (keyevent->modifiers() == Qt::ControlModifier && keyevent->key() == Qt::Key_R)
         {
             redo();
+        }
+
+        if (keyevent->key() == Qt::Key_Enter||keyevent->key()==Qt::Key_Return)
+        {
+            if (m_bInputText == true)
+            {
+                m_bInputText = false;
+                update();
+            }
+            QApplication::setOverrideCursor(Qt::ArrowCursor);
+           
+        }
+        if (keyevent->key() == Qt::Key_Backspace)
+        {
+            if (m_bInputText == true)
+            {
+                ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
+                if (tmpText != NULL)
+                {
+                    int tmplen = tmpText->text.length();
+                    if (tmplen > 0)
+                    {
+                        tmpText->text.truncate(tmplen - 1);
+                        update();
+                    }
+                }
+            }
         }
     }
     return false;
