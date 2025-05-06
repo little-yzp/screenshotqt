@@ -10,4 +10,7 @@
     <qresource prefix="/styles">
         <file>styles/styles.qss</file>
     </qresource>
+    <qresource prefix="/translations">
+        <file>app_zh_CN.qm</file>
+    </qresource>
 </RCC>

@@ -61,3 +61,9 @@ RESOURCES += \
     icon.qrc
 
 RC_ICONS = icon\screenshot.ico
+
+TRANSLATIONS = app_zh_CN.ts
+
+release{
+    DEFINES += QT_NO_DEBUG_OUTPUT
+}

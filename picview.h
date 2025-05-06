@@ -7,6 +7,7 @@
 #include <qapplication.h>
 #include "util.h"
 #include <QDir.h>
+#include "textshowdialog.h"
 
 namespace Ui {
 class PicView;
@@ -54,6 +55,7 @@ private:
     QMenu* m_menu;
     double m_zoomFactor;//实现图片的放大缩小
     QFont m_font;
+    TextShowDialog* m_textShowDialog;
 
     //图片矩形绘制
     bool m_bDrawRectStart;
@@ -67,11 +69,11 @@ private:
     //文字输入
     bool m_bInputText;
 
-    void saveState();
     void undo(); //撤销
     void redo(); //恢复
 
     QList<Shape*>m_shapeList;
+    QList<Shape*>m_redoShapeList;
     void snapshot();
 };
 

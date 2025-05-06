@@ -19,6 +19,7 @@ PicView::PicView(QWidget *parent) :PicView(QPixmap(), nullptr)
 {
     m_font.setFamily("宋体");
     m_font.setPointSize(20);
+    m_font.setStyleStrategy(QFont::StyleStrategy::PreferAntialias);
 }
 
 PicView::PicView(QPixmap pixmap, QWidget* parent) :
@@ -33,6 +34,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_bInputText(false),
     QWidget(parent),
     m_zoomFactor(1.0),
+    m_textShowDialog(new TextShowDialog(this)),
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
@@ -42,20 +44,20 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
 
     m_menu = new QMenu(this);
 
-    QAction* action1 = new QAction("close", this);
-    QAction* action2 = new QAction("save", this);
-    QAction* action3 = new QAction("copy to clipboard", this);
-    QAction* action4 = new QAction("draw rect", this);
-    QAction* action5 = new QAction("undo", this);
-    QAction* action6 = new QAction("redo", this);
-    QAction* action7 = new QAction("draw Eillpse", this);
-    QAction* action8 = new QAction("draw straight Line", this);
-    QAction* action9 = new QAction("inputText", this);
-    QAction* action10 = new QAction("Text recognition", this);
+    QAction* action1 = new QAction(tr("close"), this);
+    QAction* action2 = new QAction(tr("save"), this);
+    QAction* action3 = new QAction(tr("copy to clipboard"), this);
+    QAction* action4 = new QAction(tr("draw rect"), this);
+    QAction* action5 = new QAction(tr("undo"), this);
+    QAction* action6 = new QAction(tr("redo"), this);
+    QAction* action7 = new QAction(tr("draw Eillpse"), this);
+    QAction* action8 = new QAction(tr("draw straight Line"), this);
+    QAction* action9 = new QAction(tr("inputText"), this);
+    QAction* action10 = new QAction(tr("Text recognition"), this);
 
     connect(action1, &QAction::triggered, this, &QWidget::close);
     connect(action2, &QAction::triggered, this, [&]() {
-        QString FullPathName=QFileDialog::getSaveFileName(nullptr,"picture saving",SnipasteApp::getLastOpenDir(),tr("*.png"));
+        QString FullPathName=QFileDialog::getSaveFileName(nullptr,tr("picture saving"),SnipasteApp::getLastOpenDir(),tr("*.png"));
         if (FullPathName.isEmpty())
         {
             return;
@@ -98,20 +100,23 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
         m_bDrawLine = false;
         m_bDrawRectStart = false;
         m_bDrawEllipse = false;
-        QApplication::setOverrideCursor(Qt::CrossCursor);
+        QApplication::setOverrideCursor(Qt::IBeamCursor);
         });
     connect(action10, &QAction::triggered, this, [&]() {
         OCR_PARAM params = { 0 };
         //先判断文件是否存在
-        QFile file(QDir::toNativeSeparators(QApplication::applicationDirPath()+ SnipasteApp::s_cachePath.append(QString("%1.png").arg(this->winId()))));
+        QFile file(QDir::toNativeSeparators(QApplication::applicationDirPath()+ SnipasteApp::s_cachePath+QString("%1.png").arg(this->winId())));
+        QFileInfo fileInfo(file);
+        qDebug() << fileInfo.absoluteFilePath();
         if (!file.exists())
         {
             qDebug() << "file is not exists";
             return;
         }
-        QFileInfo fileInfo(file);
+       
        
         char *result=MYOCR::Detect(SnipasteApp::s_handle, QDir::toNativeSeparators(fileInfo.absolutePath().append("\\")).toStdString().c_str(), QString("%1.png").arg(this->winId()).toStdString().c_str(), &params);
+        m_textShowDialog->ExecAndRet(result);
         qDebug() << result;
         });
     m_menu->addAction(action1);
@@ -218,11 +223,12 @@ void PicView::paintEvent(QPaintEvent* event)
         ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.at(i));
         if (tmpText != NULL)
         {
-            int fontSize = QApplication::font().pixelSize();
+            //无法直接获取pixelSize()大小？？
+            int fontSize = QApplication::font().pointSize();
             qDebug() << "系统字体大小:" << fontSize;
             if (tmpText->text.isEmpty())
             {
-                painter.drawRect(QRectF(tmpText->m_topLeft, QSizeF(tmpText->m_topLeft.x() + 20, tmpText->m_topLeft.y() + fontSize)));
+                painter.drawRect(tmpText->m_topLeft.x(),tmpText->m_topLeft.y(),50*2,fontSize*4);
             }
             else
             {
@@ -276,11 +282,25 @@ void PicView::mousePressEvent(QMouseEvent* event)
             tmp->m_topLeft = event->pos();
             m_shapeList.push_back(tmp);
         }
-        else if (m_bInputText)
+        else if (m_bInputText&&((m_shapeList.count()>0&&dynamic_cast<ShapeText*>(m_shapeList.last())==NULL)||m_shapeList.count()<=0))
         {
             Shape* tmp = new ShapeText;
             tmp->m_topLeft = event->pos();
             m_shapeList.push_back(tmp);
+            update();
+        }
+        else if (m_bInputText)
+        {
+            
+            ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
+            if(tmpText->text=="")
+                tmpText->m_topLeft = event->pos();
+            else 
+            {
+                Shape* tmp = new ShapeText;
+                tmp->m_topLeft = event->pos();
+                m_shapeList.push_back(tmp);
+            }
             update();
         }
         else
@@ -334,7 +354,6 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
         m_dragging = false;
         if (m_bDrawRectStart)
         {
-            this->saveState();
             m_bDrawRectStart = false;
         }
         else if (m_bDrawEllipse)
@@ -345,7 +364,8 @@ void PicView::mouseReleaseEvent(QMouseEvent* event)
         {
             m_bDrawLine = false;
         }
-        QApplication::restoreOverrideCursor();
+        if(m_bInputText!=true)
+            QApplication::restoreOverrideCursor();
     }
 }
 
@@ -358,6 +378,7 @@ void PicView::inputMethodEvent(QInputMethodEvent* event)
         if (tmpText != NULL)
         {
             tmpText->text.append(text);
+            m_bInputText = false;
             update();
         }
         
@@ -397,6 +418,10 @@ bool PicView::eventFilter(QObject* obj, QEvent* event)
         if (keyevent->modifiers() == Qt::ControlModifier && keyevent->key() == Qt::Key_Z)
         {
             undo();
+        }
+        if (keyevent->modifiers() == Qt::ControlModifier && keyevent->key() == Qt::Key_R)
+        {
+            redo();
         }
     }
     return false;
@@ -452,17 +477,18 @@ void PicView::wheelEvent(QWheelEvent* event)
     }
 }
 
-void PicView::saveState()
-{
-}
-
 void PicView::undo() 
 {
-    if (m_shapeList.count() < 0)return;
+    if (m_shapeList.count() <= 0)return;
+    m_redoShapeList.push_back(m_shapeList.takeLast());
+    update();
+    
 }
 
 void PicView::redo()
 {
+    if (m_redoShapeList.count() <= 0)return;
+    m_shapeList.push_back(m_redoShapeList.takeLast());
     update();
 }
 

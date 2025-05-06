@@ -162,18 +162,18 @@ void SnipasteApp::funcHandler(QAction *action)
 void SnipasteApp::InitMenu()
 {
     m_menu=new QMenu();
-    m_menu->addAction("screenshot",this,SLOT(ScreenShot()));
-    m_menu->addAction("quit",qApp,SLOT(quit()));
+    m_menu->addAction(tr("screenshot"),this,SLOT(ScreenShot()));
+    m_menu->addAction(tr("quit"),qApp,SLOT(quit()));
     this->sysMenu->setContextMenu(m_menu);
 }
 void SnipasteApp::InitToolBar()
 {
 	m_toolBar = new QToolBar;
-	m_toolBar->addAction(QIcon(":/icon/icon/save.svg"), "save");
-    m_toolBar->addAction(QIcon(":/icon/icon/pin.svg"), "pin");
+	m_toolBar->addAction(QIcon(":/icon/icon/save.svg"), ("save"));
+    m_toolBar->addAction(QIcon(":/icon/icon/pin.svg"), ("pin"));
     m_toolBar->addSeparator();
-	m_toolBar->addAction(QIcon(":/icon/icon/delete.svg"), "quit");
-    m_toolBar->addAction(QIcon(":/icon/icon/trick.svg"),"finish");
+	m_toolBar->addAction(QIcon(":/icon/icon/delete.svg"), ("quit"));
+    m_toolBar->addAction(QIcon(":/icon/icon/trick.svg"),("finish"));
 	connect(m_toolBar, &QToolBar::actionTriggered, this, &SnipasteApp::funcHandler);
     m_toolBar->setWindowFlags(Qt::FramelessWindowHint);
 }
