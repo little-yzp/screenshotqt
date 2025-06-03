@@ -49,7 +49,7 @@
         <location filename="picview.cpp" line="53"/>
         <source>draw Eillpse</source>
         <translatorcomment>矩形工具</translatorcomment>
-        <translation type="unfinished">矩形工具</translation>
+        <translation type="unfinished">圆型工具</translation>
     </message>
     <message>
         <location filename="picview.cpp" line="54"/>
