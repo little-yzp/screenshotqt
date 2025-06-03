@@ -3,6 +3,7 @@
 #include "shape.h"
 #include "ui_picview.h"
 #include "OcrLib/include/OcrLiteCApi.h"
+#include "staticdata.h"
 
 #include <QPixmap>
 #include <QPainter>
@@ -36,6 +37,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_zoomFactor(1.0),
     m_textShowDialog(new TextShowDialog(this)),
     m_timer(new QTimer(this)),
+    m_scale(1.0),
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
@@ -217,15 +219,18 @@ void PicView::paintEvent(QPaintEvent* event)
     painter.restore();
 
     painter.setRenderHint(QPainter::Antialiasing, true);
-
+    //用于绘制图形的放大缩小
+    painter.scale(m_scale, m_scale);
+    //绘制多种图形
     for (int i = 0; i < m_shapeList.length(); i++)
     {
+        //矩形
         ShapeRect* tmpRect = dynamic_cast<ShapeRect*>(m_shapeList.at(i));
         if (tmpRect != NULL)
         {
             painter.drawRect(QRect(tmpRect->m_topLeft, tmpRect->m_rightBottom));
         }
-
+        //圆形
         ShapeEillpse* tmpEillpse = dynamic_cast<ShapeEillpse*>(m_shapeList.at(i));
         if (tmpEillpse != NULL)
         {
@@ -239,12 +244,13 @@ void PicView::paintEvent(QPaintEvent* event)
             );
             painter.drawEllipse(center,rx,ry);
         }
-        
+        //直线
         ShapeLine* tmpLine = dynamic_cast<ShapeLine*>(m_shapeList.at(i));
         if (tmpLine != NULL)
         {
             painter.drawLine(tmpLine->m_topLeft, tmpLine->m_rightBottom);
         }
+        //文字
         ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.at(i));
         if (tmpText != NULL)
         {
@@ -255,12 +261,12 @@ void PicView::paintEvent(QPaintEvent* event)
                 //绘制光标
                 if (m_bCursorVisible)
                 {
-                    int cursor_x = tmpText->m_topLeft.x()+this->fontMetrics().width(tmpText->text) + 2;
+                    int cursor_x = tmpText->m_topLeft.x()+this->fontMetrics().width(tmpText->text+tmpText->preeditText) + 2;
                     int cursor_y = tmpText->m_topLeft.y() + m_nInputH;
                     painter.drawLine(cursor_x, tmpText->m_topLeft.y()+5, cursor_x, cursor_y-5);
                 }
             }
-            painter.drawText(tmpText->m_topLeft.x(),tmpText->m_topLeft.y()+m_nInputH/2.0, tmpText->text);
+            painter.drawText(tmpText->m_topLeft.x(),tmpText->m_topLeft.y()+m_nInputH/2.0, tmpText->text+tmpText->preeditText);
         }
     }  
 }
@@ -289,7 +295,8 @@ void PicView::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)
     {
-       
+        
+        //event->pos()返回的是相对于当前widget的局部坐标
         m_offset = event->globalPos()-pos();
         if (m_bDrawRectStart)
         {
@@ -409,13 +416,38 @@ void PicView::inputMethodEvent(QInputMethodEvent* event)
             if (tmpText != NULL)
             {
                 tmpText->text.append(text);
-                update();
+                tmpText->preeditText = "";
+               
             }
 
         }
+        QString preeditText = event->preeditString();
+        if (!preeditText.isEmpty())
+        {
+            if (tmpText != NULL)
+            {
+                tmpText->preeditText = preeditText;
+            }
+        }
+        else
+        {
+            if (tmpText != NULL)
+            {
+                tmpText->preeditText="";
+            }
+        }
+        update();
     }
    
     event->accept();
+}
+
+void PicView::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    if (m_bInputText == true)
+    {
+        m_bInputText = false;
+    }
 }
 
 void PicView::focusOutEvent(QFocusEvent* event)
@@ -436,6 +468,23 @@ void PicView::leaveEvent(QEvent* event)
 void PicView::enterEvent(QEvent* event)
 {
     setFocus();
+}
+
+void PicView::keyPressEvent(QKeyEvent* event)
+{
+    if (m_bInputText == true)
+    {
+        QString text = event->text();
+        if (!text.isEmpty() && text.at(0).isPrint())
+        {
+            ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
+            if (tmpText != NULL)
+            {
+                tmpText->text.append(text.at(0));
+                update();
+            }
+        }
+    }
 }
 
 bool PicView::eventFilter(QObject* obj, QEvent* event)
@@ -467,18 +516,25 @@ bool PicView::eventFilter(QObject* obj, QEvent* event)
            
         }
         if (keyevent->key() == Qt::Key_Backspace)
-        {
-            if (m_bInputText == true)
+        {            if (m_bInputText == true)
             {
                 ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
                 if (tmpText != NULL)
                 {
                     int tmplen = tmpText->text.length();
-                    if (tmplen > 0)
+                    int tmpPreEditLen = tmpText->preeditText.length();
+                    if (tmpPreEditLen > 0)
+                    {
+                        tmpText->preeditText.truncate(tmpPreEditLen - 1);
+                        update();
+                       
+                    }
+                    else if (tmplen > 0)
                     {
                         tmpText->text.truncate(tmplen - 1);
                         update();
                     }
+                   
                 }
             }
         }
@@ -515,6 +571,10 @@ void PicView::wheelEvent(QWheelEvent* event)
         int newH = incrementH + this->height();
         int newW = incrementW + this->width();
 
+        if (newH >= StaticData::Instance().s_rect.height() || newW >= StaticData::Instance().s_rect.width())
+        {
+            return;
+        }//放大到窗口大小停止放大
 
         //保持窗口中心位置不变
         QPoint oldCenter = geometry().center();
@@ -523,6 +583,23 @@ void PicView::wheelEvent(QWheelEvent* event)
         newGeometry.moveCenter(oldCenter);
 
         setGeometry(newGeometry);
+
+        //(TODO)同步放大缩小图片中绘制的图形
+        double scaleFactor = 1.1;
+        if (event->angleDelta().y() > 0)
+        {
+            m_scale *= scaleFactor;
+        }
+        else
+        {
+            
+            m_scale /= scaleFactor;
+            if (m_scale < 1.0)
+            {
+                m_scale = 1.0;
+            }
+        }
+        update();
 
         //设置平滑动画效果
         QPropertyAnimation* animation = new QPropertyAnimation(this, "size");

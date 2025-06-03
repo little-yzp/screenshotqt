@@ -43,6 +43,7 @@ class ShapeText :public Shape
     Q_OBJECT
 public:
     QString text;
+    QString preeditText;
 };
 #endif // Shape_H
 

@@ -31,6 +31,7 @@ public:
     void mouseMoveEvent(QMouseEvent*event)override;
     void mouseReleaseEvent(QMouseEvent* event)override;
     void inputMethodEvent(QInputMethodEvent* event)override;
+    void mouseDoubleClickEvent(QMouseEvent* event)override;
 
     void closeEvent(QCloseEvent* event)override;
     void wheelEvent(QWheelEvent* event)override;
@@ -41,6 +42,7 @@ public:
     void leaveEvent(QEvent* event)override; //鼠标移出窗口事件
     void enterEvent(QEvent* event)override; //鼠标移入窗口事件
 
+    void keyPressEvent(QKeyEvent* event)override; //文字识别中的英文输入
     bool eventFilter(QObject* obj, QEvent* event)override;
 
     //override的作用:
@@ -72,6 +74,9 @@ private:
 
     //文字输入
     bool m_bInputText;
+
+    //绘制图形的放大与缩小
+    double m_scale;
 
     void undo(); //撤销
     void redo(); //恢复
