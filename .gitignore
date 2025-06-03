@@ -5,3 +5,7 @@ ui_*
 .qmake.stash
 savePng
 *.obj
+*.tlog
+*.pdb
+*.log
+*.ilk
