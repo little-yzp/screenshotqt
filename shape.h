@@ -42,8 +42,11 @@ class ShapeText :public Shape
 {
     Q_OBJECT
 public:
+    ShapeText();
+    ~ShapeText();
     QString text;
     QString preeditText;
+    int lineNum;
 };
 #endif // Shape_H
 

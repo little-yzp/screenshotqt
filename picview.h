@@ -78,6 +78,11 @@ private:
     //绘制图形的放大与缩小
     double m_scale;
 
+    //图片的长宽比
+    double m_aspectRatio;
+
+    //原因大小
+    QSize m_size;
     void undo(); //撤销
     void redo(); //恢复
 

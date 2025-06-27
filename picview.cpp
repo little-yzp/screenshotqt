@@ -38,6 +38,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_textShowDialog(new TextShowDialog(this)),
     m_timer(new QTimer(this)),
     m_scale(1.0),
+    m_aspectRatio(1.0),
     ui(new Ui::PicView())
 {
     ui->setupUi(this);
@@ -48,7 +49,7 @@ PicView::PicView(QPixmap pixmap, QWidget* parent) :
     m_menu = new QMenu(this);
     this->setFont(m_font);
     
-    m_nInputH = this->fontMetrics() .capHeight()*4;
+    m_nInputH = (this->fontMetrics().ascent()+this->fontMetrics().descent());
 
     QAction* action1 = new QAction(tr("close"), this);
     action1->setShortcut(QKeySequence(Qt::Key_Escape));
@@ -254,19 +255,37 @@ void PicView::paintEvent(QPaintEvent* event)
         ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.at(i));
         if (tmpText != NULL)
         {
+            int idx = tmpText->text.lastIndexOf("\n");
+            QString rightStr = tmpText->text.mid(idx + 1);
+            int inputW = this->fontMetrics().width(rightStr + tmpText->preeditText) * 2;
+            if (inputW < 100)
+            {
+                inputW = 100;
+            }
+            int inputH = m_nInputH;
+            for (int i = 0; i < tmpText->lineNum-1; i++)
+            {
+                inputH += m_nInputH;
+            }
+            int space = 3;
+            QRect rect(tmpText->m_topLeft.x(), tmpText->m_topLeft.y(), inputW, inputH+space*2+(tmpText->lineNum-1)*space);
             //无法直接获取pixelSize()大小？？
             if (m_bInputText==true && (i == m_shapeList.length()-1))
             {
-                painter.drawRect(tmpText->m_topLeft.x(),tmpText->m_topLeft.y(),50*2,m_nInputH);
+                //绘制输入框矩形
+                painter.drawRect(rect);
                 //绘制光标
                 if (m_bCursorVisible)
                 {
-                    int cursor_x = tmpText->m_topLeft.x()+this->fontMetrics().width(tmpText->text+tmpText->preeditText) + 2;
+                   
+                    int cursor_x = tmpText->m_topLeft.x()+this->fontMetrics().width(rightStr+tmpText->preeditText) + 2;
                     int cursor_y = tmpText->m_topLeft.y() + m_nInputH;
-                    painter.drawLine(cursor_x, tmpText->m_topLeft.y()+5, cursor_x, cursor_y-5);
+
+                    painter.drawLine(cursor_x, tmpText->m_topLeft.y()+(tmpText->lineNum-1)*this->fontMetrics().capHeight(), cursor_x, tmpText->m_topLeft.y()+ tmpText->lineNum * this->fontMetrics().capHeight());
                 }
             }
-            painter.drawText(tmpText->m_topLeft.x(),tmpText->m_topLeft.y()+m_nInputH/2.0, tmpText->text+tmpText->preeditText);
+            //绘制文字不能直接使用drawText(x,y,text);无法识别换行符
+            painter.drawText(rect.x(),rect.y()+space,rect.width(),rect.height(),Qt::AlignLeft, tmpText->text+tmpText->preeditText);
         }
     }  
 }
@@ -276,7 +295,10 @@ void PicView::ShowPic(QPixmap pixmap)
     this->m_pixmap = pixmap;
     if (!m_pixmap.isNull())
     {
-        this->setMinimumSize(pixmap.size());
+        m_size = pixmap.size();
+        QSize pixmapSize = m_size;
+        this->m_aspectRatio = pixmapSize.width() /(pixmapSize.height()*1.0);
+        this->setMinimumSize(pixmapSize);
 		this->show();
 
         QString path = QDir::toNativeSeparators(QApplication::applicationDirPath() + QString("/cache/%1.png").arg(this->winId()));
@@ -447,6 +469,7 @@ void PicView::mouseDoubleClickEvent(QMouseEvent* event)
     if (m_bInputText == true)
     {
         m_bInputText = false;
+        QApplication::setOverrideCursor(Qt::ArrowCursor);
     }
 }
 
@@ -504,7 +527,20 @@ bool PicView::eventFilter(QObject* obj, QEvent* event)
         {
             redo();
         }
-
+        if (  keyevent->modifiers() == Qt::ShiftModifier&& (keyevent->key() == Qt::Key_Enter || keyevent->key() == Qt::Key_Return))//优先级在单个enter和renturn之前
+        {
+            if (m_bInputText == true)
+            {
+                ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
+                if (tmpText != NULL)
+                {
+                    tmpText->text.append("\n");
+                    tmpText->lineNum += 1;//行数加一
+                    return true;
+                }
+            }
+            
+        }
         if (keyevent->key() == Qt::Key_Enter||keyevent->key()==Qt::Key_Return)
         {
             if (m_bInputText == true)
@@ -515,10 +551,11 @@ bool PicView::eventFilter(QObject* obj, QEvent* event)
             QApplication::setOverrideCursor(Qt::ArrowCursor);
            
         }
+       
         if (keyevent->key() == Qt::Key_Backspace)
-        {            if (m_bInputText == true)
-            {
-                ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
+        {            
+            if (m_bInputText == true)
+            {   ShapeText* tmpText = dynamic_cast<ShapeText*>(m_shapeList.last());
                 if (tmpText != NULL)
                 {
                     int tmplen = tmpText->text.length();
@@ -533,6 +570,10 @@ bool PicView::eventFilter(QObject* obj, QEvent* event)
                     {
                         tmpText->text.truncate(tmplen - 1);
                         update();
+                    }
+                    else
+                    {
+                        m_bInputText = false;
                     }
                    
                 }
@@ -563,6 +604,7 @@ void PicView::wheelEvent(QWheelEvent* event)
 {
     if (event->modifiers() & Qt::ControlModifier)
     {
+        this->setMinimumSize(100*m_aspectRatio, 100);
         int incrementHValue = static_cast<int>(height() * 0.1);
         int incrementWValue = static_cast<int>(width() * 0.1);
 

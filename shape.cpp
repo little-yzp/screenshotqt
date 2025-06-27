@@ -26,3 +26,13 @@ ShapeEillpse::ShapeEillpse(QObject* parent)
 {
 
 }
+ShapeText::ShapeText() :text(""),
+					preeditText(""),
+					lineNum(1)
+{
+
+}
+
+ShapeText::~ShapeText()
+{
+}
